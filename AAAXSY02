@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声音按钮交互页面</title>
+    <style>
+        /* 全局样式 - 可自定义修改 */
+        :root {
+            /* 基础颜色配置（可直接修改） */
+            --bg-color: #f0f4f8;
+            --border-color: #2d3748;
+            --title-color: #2d3748;
+            --group-bg-color: #ffffff;
+            --button-bg-color: #4299e1;
+            --button-text-color: #ffffff;
+            --footer-text-color: #4a5568;
+            --marquee-color: #e53e3e;
+            
+            /* 字体配置（可直接修改） */
+            --title-font-size: 2.5rem;
+            --group-font-size: 1.2rem;
+            --button-font-size: 1rem;
+            --footer-font-size: 0.9rem;
+            --marquee-font-size: 1.1rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* 标题样式 */
+        .page-title {
+            text-align: center;
+            color: var(--title-color);
+            font-size: var(--title-font-size);
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        /* 按钮分组容器 */
+        .button-groups {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        /* 单个分组样式 */
+        .button-group {
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            background-color: var(--group-bg-color);
+            min-width: 200px;
+        }
+
+        /* 分组标题样式 */
+        .group-title {
+            text-align: center;
+            font-size: var(--group-font-size);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        /* 按钮样式 */
+        .sound-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            font-size: var(--button-font-size);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sound-button:hover {
+            opacity: 0.9;
+        }
+
+        /* 图片容器 */
+        .image-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .custom-image {
+            width: 200px; /* 可自定义大小 */
+            height: 150px;
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            /* 可修改位置：比如 position: absolute; top: 10px; left: 10px; */
+        }
+
+        /* 底部文本区域 */
+        .footer-texts {
+            display: flex;
+            justify-content: space-around;
+            margin: 40px 0 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .text-module {
+            width: 300px;
+            color: var(--footer-text-color);
+            font-size: var(--footer-font-size);
+            line-height: 1.6;
+        }
+
+        /* 滚动文字样式 */
+        .marquee-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 5px;
+        }
+
+        .marquee-text {
+            color: var(--marquee-color);
+            font-size: var(--marquee-font-size);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: marquee 15s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .button-groups {
+                flex-direction: column;
+                align-items: center;
+            }
+            .footer-texts {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部标题 -->
+    <h1 class="page-title">声音交互按钮面板</h1>
+
+    <!-- 图片展示区域 -->
+    <div class="image-container">
+        <!-- 替换为你的图片URL（建议用GitHub仓库的图片地址） -->
+        <img src="https://picsum.photos/200/150?random=1" alt="素材1" class="custom-image">
+        <img src="https://picsum.photos/200/150?random=2" alt="素材2" class="custom-image">
+        <img src="https://picsum.photos/200/150?random=3" alt="素材3" class="custom-image">
+    </div>
+
+    <!-- 按钮分组区域 -->
+    <div class="button-groups">
+        <!-- 分组1 -->
+        <div class="button-group">
+            <h2 class="group-title">分组1</h2>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-click-1117.mp3">测试1</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3">测试2</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3">测试3</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-retro-arcade-game-over-470.mp3">测试4</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
+        </div>
+
+        <!-- 分组2 -->
+        <div class="button-group">
+            <h2 class="group-title">分组2</h2>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3">测试1</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-short-notification-sound-212.mp3">测试2</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-success-1-2015.mp3">测试3</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-failure-1-2016.mp3">测试4</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-fast-small-sweep-transition-166.mp3">测试5</button>
+        </div>
+
+        <!-- 分组3 -->
+        <div class="button-group">
+            <h2 class="group-title">分组3</h2>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-bubble-pop-903.mp3">测试1</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-jump-646.mp3">测试2</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-sad-trombone-471.mp3">测试3</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-laugh-619.mp3">测试4</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-impact-201.mp3">测试5</button>
+        </div>
+
+        <!-- 分组4 -->
+        <div class="button-group">
+            <h2 class="group-title">分组4</h2>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-water-droplet-splash-17.mp3">测试1</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-wind-whoosh-1043.mp3">测试2</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-thunder-strike-1293.mp3">测试3</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-rain-and-thunder-storm-1319.mp3">测试4</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-light-waves-1179.mp3">测试5</button>
+        </div>
+
+        <!-- 分组5 -->
+        <div class="button-group">
+            <h2 class="group-title">分组5</h2>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-dog-barking-twice-1.wav">测试1</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cat-meow-1133.mp3">测试2</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-birds-ambience-1215.mp3">测试3</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-insects-cricket-sound-1210.mp3">测试4</button>
+            <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-frog-croaking-1218.mp3">测试5</button>
+        </div>
+    </div>
+
+    <!-- 底部文本模块 -->
+    <div class="footer-texts">
+        <!-- 左侧文本模块 -->
+        <div class="text-module">
+            <p>第一行文本：声音按钮交互面板</p>
+            <p>第二行文本：点击按钮播放对应音效</p>
+            <p>第三行文本：支持自定义颜色和字体</p>
+            <p>第四行文本：包含5个分组共25个按钮</p>
+            <p>第五行文本：可自由调整UI样式</p>
+            <p>第六行文本：适配移动端和桌面端</p>
+        </div>
+
+        <!-- 中间文本模块 -->
+        <div class="text-module">
+            <p>第一行文本：自定义图片展示区域</p>
+            <p>第二行文本：支持调整图片大小位置</p>
+            <p>第三行文本：音效资源来自mixkit</p>
+            <p>第四行文本：滚动文字可自定义样式</p>
+            <p>第五行文本：分组背景色可独立修改</p>
+            <p>第六行文本：按钮hover有过渡效果</p>
+        </div>
+
+        <!-- 右侧文本模块 -->
+        <div class="text-module">
+            <p>第一行文本：部署到GitHub Pages</p>
+            <p>第二行文本：纯前端HTML/CSS/JS实现</p>
+            <p>第三行文本：无后端依赖开箱即用</p>
+            <p>第四行文本：响应式布局适配各种设备</p>
+            <p>第五行文本：可扩展更多音效和分组</p>
+            <p>第六行文本：开源可自由修改使用</p>
+        </div>
+    </div>
+
+    <!-- 滚动文字区域 -->
+    <div class="marquee-container">
+        <div class="marquee-text">欢迎使用声音交互按钮面板 | 可自定义颜色、字体、图片、音效 | 部署于GitHub Pages | 支持移动端适配</div>
+    </div>
+
+    <script>
+        // 声音播放逻辑
+        document.addEventListener('DOMContentLoaded', () => {
+            // 获取所有按钮
+            const buttons = document.querySelectorAll('.sound-button');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // 获取音效地址
+                    const soundSrc = button.getAttribute('data-sound');
+                    // 创建音频对象并播放
+                    const audio = new Audio(soundSrc);
+                    audio.play().catch(error => {
+                        console.error('播放音效失败:', error);
+                        alert('音效播放失败，请检查网络或浏览器设置');
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
