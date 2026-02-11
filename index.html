@@ -17,12 +17,16 @@
             --footer-text-color: #4a5568;
             --marquee-color: #e53e3e;
             
-            /* 分组色块颜色（可自定义每个分组的色块） */
-            --group1-color: #e53e3e;
-            --group2-color: #38a169;
-            --group3-color: #3182ce;
-            --group4-color: #805ad5;
-            --group5-color: #dd6b20;
+            /* 分组色块颜色（每个分组可自定义） */
+            --group1-block-color: #e53e3e;
+            --group2-block-color: #38a169;
+            --group3-block-color: #3182ce;
+            --group4-block-color: #805ad5;
+            --group5-block-color: #dd6b20;
+            
+            /* 分组色块样式（和按钮保持一致） */
+            --block-border-radius: 5px;
+            --block-padding: 8px 12px;
             
             /* 字体配置（可直接修改） */
             --title-font-size: 2.5rem;
@@ -30,10 +34,6 @@
             --button-font-size: 1rem;
             --footer-font-size: 0.9rem;
             --marquee-font-size: 1.1rem;
-            
-            /* 分组色块尺寸 */
-            --group-color-block-height: 8px;
-            --group-color-block-width: 60px;
         }
 
         * {
@@ -58,104 +58,69 @@
             font-weight: bold;
         }
 
-        /* 按钮分组容器 - 修改为横向布局 */
+        /* 按钮分组容器 */
         .button-groups {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
             justify-content: center;
-            align-items: stretch; /* 让所有分组高度一致 */
             margin: 30px 0;
-            width: 100%;
-            overflow-x: auto; /* 适配小屏幕横向滚动 */
-            padding: 10px 0;
         }
 
-        /* 单个分组样式 - 改为横向排列的卡片 */
+        /* 单个分组样式 */
         .button-group {
             border: 2px solid var(--border-color);
             border-radius: 10px;
             padding: 15px;
             background-color: var(--group-bg-color);
-            display: flex; /* 分组内部横向布局 */
-            flex-direction: column;
-            align-items: center;
-            min-width: 120px; /* 缩小分组宽度适配横向 */
-            flex: 1; /* 平分宽度 */
-            max-width: 150px; /* 限制最大宽度 */
-        }
-
-        /* 分组标题容器（包含标题+色块） */
-        .group-header {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 15px;
-            width: 100%;
+            min-width: 400px; /* 加宽分组适配横向按钮 */
         }
 
         /* 分组标题样式 */
         .group-title {
             text-align: center;
             font-size: var(--group-font-size);
-            margin-bottom: 8px; /* 标题与色块间距 */
+            margin-bottom: 10px;
             font-weight: 600;
         }
 
-        /* 分组色块样式 */
+        /* 分组色块样式（仿按钮） */
         .group-color-block {
-            height: var(--group-color-block-height);
-            width: var(--group-color-block-width);
-            border-radius: 4px;
-            margin-bottom: 10px;
+            margin: 0 auto 15px; /* 居中+上下间距 */
+            width: fit-content;
+            padding: var(--block-padding);
+            border-radius: var(--block-border-radius);
+            color: white; /* 色块文字白色 */
+            font-size: 0.9rem;
+            text-align: center;
         }
 
-        /* 分组1色块 */
-        #group1 .group-color-block {
-            background-color: var(--group1-color);
-        }
+        /* 每个分组的色块颜色 */
+        #group1 .group-color-block { background-color: var(--group1-block-color); }
+        #group2 .group-color-block { background-color: var(--group2-block-color); }
+        #group3 .group-color-block { background-color: var(--group3-block-color); }
+        #group4 .group-color-block { background-color: var(--group4-block-color); }
+        #group5 .group-color-block { background-color: var(--group5-block-color); }
 
-        /* 分组2色块 */
-        #group2 .group-color-block {
-            background-color: var(--group2-color);
-        }
-
-        /* 分组3色块 */
-        #group3 .group-color-block {
-            background-color: var(--group3-color);
-        }
-
-        /* 分组4色块 */
-        #group4 .group-color-block {
-            background-color: var(--group4-color);
-        }
-
-        /* 分组5色块 */
-        #group5 .group-color-block {
-            background-color: var(--group5-color);
-        }
-
-        /* 按钮容器 - 保持按钮垂直排列 */
-        .button-container {
+        /* 按钮容器 - 改为横向排列 */
+        .button-row {
             display: flex;
-            flex-direction: column;
-            width: 100%;
-            flex-grow: 1; /* 让按钮区域占满剩余空间 */
+            gap: 8px; /* 按钮之间的间距 */
+            justify-content: center;
+            flex-wrap: wrap; /* 小屏幕自动换行 */
         }
 
         /* 按钮样式 */
         .sound-button {
-            display: block;
-            width: 100%;
-            padding: 10px 5px; /* 缩小左右内边距适配横向 */
-            margin: 6px 0;
+            padding: 10px 15px;
             border: none;
-            border-radius: 5px;
+            border-radius: var(--block-border-radius); /* 和色块统一圆角 */
             background-color: var(--button-bg-color);
             color: var(--button-text-color);
             font-size: var(--button-font-size);
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: opacity 0.3s;
+            white-space: nowrap; /* 按钮文字不换行 */
         }
 
         .sound-button:hover {
@@ -177,7 +142,6 @@
             object-fit: cover;
             border: 2px solid var(--border-color);
             border-radius: 8px;
-            /* 可修改位置：比如 position: absolute; top: 10px; left: 10px; */
         }
 
         /* 底部文本区域 */
@@ -220,12 +184,18 @@
         /* 响应式适配 */
         @media (max-width: 768px) {
             .button-groups {
-                flex-direction: column; /* 移动端仍改为垂直 */
+                flex-direction: column;
                 align-items: center;
             }
             .button-group {
-                max-width: 100%;
-                width: 90%;
+                min-width: 90%;
+            }
+            .button-row {
+                flex-direction: column; /* 移动端按钮恢复纵向 */
+                align-items: center;
+            }
+            .sound-button {
+                width: 100%;
             }
             .footer-texts {
                 flex-direction: column;
@@ -240,21 +210,18 @@
 
     <!-- 图片展示区域 -->
     <div class="image-container">
-        <!-- 替换为你的图片URL（建议用GitHub仓库的图片地址） -->
         <img src="https://picsum.photos/200/150?random=1" alt="素材1" class="custom-image">
         <img src="https://picsum.photos/200/150?random=2" alt="素材2" class="custom-image">
         <img src="https://picsum.photos/200/150?random=3" alt="素材3" class="custom-image">
     </div>
 
-    <!-- 按钮分组区域 - 横向布局 -->
+    <!-- 按钮分组区域 -->
     <div class="button-groups">
         <!-- 分组1 -->
         <div class="button-group" id="group1">
-            <div class="group-header">
-                <h2 class="group-title">分组1</h2>
-                <div class="group-color-block"></div>
-            </div>
-            <div class="button-container">
+            <h2 class="group-title">分组1</h2>
+            <div class="group-color-block">分组1标识色块</div>
+            <div class="button-row">
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-click-1117.mp3">测试1</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3">测试2</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3">测试3</button>
@@ -265,11 +232,9 @@
 
         <!-- 分组2 -->
         <div class="button-group" id="group2">
-            <div class="group-header">
-                <h2 class="group-title">分组2</h2>
-                <div class="group-color-block"></div>
-            </div>
-            <div class="button-container">
+            <h2 class="group-title">分组2</h2>
+            <div class="group-color-block">分组2标识色块</div>
+            <div class="button-row">
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3">测试1</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-short-notification-sound-212.mp3">测试2</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-success-1-2015.mp3">测试3</button>
@@ -280,11 +245,9 @@
 
         <!-- 分组3 -->
         <div class="button-group" id="group3">
-            <div class="group-header">
-                <h2 class="group-title">分组3</h2>
-                <div class="group-color-block"></div>
-            </div>
-            <div class="button-container">
+            <h2 class="group-title">分组3</h2>
+            <div class="group-color-block">分组3标识色块</div>
+            <div class="button-row">
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-bubble-pop-903.mp3">测试1</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-jump-646.mp3">测试2</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cartoon-sad-trombone-471.mp3">测试3</button>
@@ -295,11 +258,9 @@
 
         <!-- 分组4 -->
         <div class="button-group" id="group4">
-            <div class="group-header">
-                <h2 class="group-title">分组4</h2>
-                <div class="group-color-block"></div>
-            </div>
-            <div class="button-container">
+            <h2 class="group-title">分组4</h2>
+            <div class="group-color-block">分组4标识色块</div>
+            <div class="button-row">
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-water-droplet-splash-17.mp3">测试1</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-wind-whoosh-1043.mp3">测试2</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-thunder-strike-1293.mp3">测试3</button>
@@ -310,11 +271,9 @@
 
         <!-- 分组5 -->
         <div class="button-group" id="group5">
-            <div class="group-header">
-                <h2 class="group-title">分组5</h2>
-                <div class="group-color-block"></div>
-            </div>
-            <div class="button-container">
+            <h2 class="group-title">分组5</h2>
+            <div class="group-color-block">分组5标识色块</div>
+            <div class="button-row">
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-dog-barking-twice-1.wav">测试1</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-cat-meow-1133.mp3">测试2</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-birds-ambience-1215.mp3">测试3</button>
@@ -326,7 +285,6 @@
 
     <!-- 底部文本模块 -->
     <div class="footer-texts">
-        <!-- 左侧文本模块 -->
         <div class="text-module">
             <p>第一行文本：声音按钮交互面板</p>
             <p>第二行文本：点击按钮播放对应音效</p>
@@ -335,8 +293,6 @@
             <p>第五行文本：可自由调整UI样式</p>
             <p>第六行文本：适配移动端和桌面端</p>
         </div>
-
-        <!-- 中间文本模块 -->
         <div class="text-module">
             <p>第一行文本：自定义图片展示区域</p>
             <p>第二行文本：支持调整图片大小位置</p>
@@ -345,8 +301,6 @@
             <p>第五行文本：分组背景色可独立修改</p>
             <p>第六行文本：按钮hover有过渡效果</p>
         </div>
-
-        <!-- 右侧文本模块 -->
         <div class="text-module">
             <p>第一行文本：部署到GitHub Pages</p>
             <p>第二行文本：纯前端HTML/CSS/JS实现</p>
@@ -365,14 +319,10 @@
     <script>
         // 声音播放逻辑
         document.addEventListener('DOMContentLoaded', () => {
-            // 获取所有按钮
             const buttons = document.querySelectorAll('.sound-button');
-            
             buttons.forEach(button => {
                 button.addEventListener('click', () => {
-                    // 获取音效地址
                     const soundSrc = button.getAttribute('data-sound');
-                    // 创建音频对象并播放
                     const audio = new Audio(soundSrc);
                     audio.play().catch(error => {
                         console.error('播放音效失败:', error);
