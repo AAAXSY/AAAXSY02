@@ -7,7 +7,7 @@
     <style>
         /* 全局样式 - 可自定义修改 */
         :root {
-            /* 基础颜色配置（可直接修改） */
+            /* 基础颜色配置 */
             --bg-color: #f0f4f8;
             --border-color: #2d3748;
             --title-color: #2d3748;
@@ -17,23 +17,28 @@
             --footer-text-color: #4a5568;
             --marquee-color: #e53e3e;
             
-            /* 分组色块颜色（每个分组可自定义） */
+            /* 分组色块颜色 */
             --group1-block-color: #e53e3e;
             --group2-block-color: #38a169;
             --group3-block-color: #3182ce;
             --group4-block-color: #805ad5;
             --group5-block-color: #dd6b20;
             
-            /* 分组色块样式（和按钮保持一致） */
+            /* 分组色块样式 */
             --block-border-radius: 5px;
             --block-padding: 8px 12px;
             
-            /* 字体配置（可直接修改） */
+            /* 字体配置 */
             --title-font-size: 2.5rem;
             --group-font-size: 1.2rem;
             --button-font-size: 1rem;
             --footer-font-size: 0.9rem;
             --marquee-font-size: 1.1rem;
+
+            /* 响应式间距配置 */
+            --page-padding: 2vw; /* 基于视口宽度的内边距，自适应 */
+            --group-max-width: 900px; /* 分组最大宽度（大屏限制） */
+            --group-min-width: 300px; /* 分组最小宽度（小屏限制） */
         }
 
         * {
@@ -45,8 +50,10 @@
 
         body {
             background-color: var(--bg-color);
-            padding: 20px;
+            padding: var(--page-padding); /* 自适应内边距 */
             min-height: 100vh;
+            max-width: 100%; /* 防止body超出视口 */
+            overflow-x: hidden; /* 隐藏横向滚动 */
         }
 
         /* 标题样式 */
@@ -56,60 +63,67 @@
             font-size: var(--title-font-size);
             margin: 20px 0;
             font-weight: bold;
+            width: 100%; /* 标题占满宽度 */
         }
 
-        /* 图片容器 */
+        /* 图片容器 - 自适应 */
         .image-container {
             display: flex;
             justify-content: center;
-            gap: 30px;
+            gap: 3vw; /* 基于视口的间距 */
             margin: 30px 0;
             flex-wrap: wrap;
+            width: 100%;
         }
 
         .custom-image {
-            width: 200px; /* 可自定义大小 */
-            height: 150px;
+            width: clamp(150px, 20vw, 200px); /* 自适应宽度：150px~200px */
+            height: auto; /* 高度自动，保持比例 */
+            aspect-ratio: 4/3; /* 固定图片比例 */
             object-fit: cover;
             border: 2px solid var(--border-color);
             border-radius: 8px;
         }
 
-        /* 按钮分组容器 - 调整为左对齐、垂直堆叠 */
+        /* 按钮分组容器 - 完全自适应 */
         .button-groups {
             display: flex;
-            flex-direction: column; /* 垂直排列，每个分组占一行 */
-            align-items: flex-start; /* 左对齐 */
-            gap: 20px; /* 分组之间的垂直间距 */
-            margin: 30px 0;
-            max-width: 800px; /* 限制最大宽度，避免按钮过宽 */
+            flex-direction: column;
+            align-items: center; /* 分组居中（更美观的适配） */
+            gap: 20px;
+            margin: 30px auto; /* 上下间距，左右自动居中 */
+            width: 100%; /* 占满父容器宽度 */
+            max-width: var(--group-max-width); /* 大屏不超宽 */
         }
 
-        /* 单个分组样式 - 宽度自适应，垂直堆叠 */
+        /* 单个分组样式 - 核心适配 */
         .button-group {
             border: 2px solid var(--border-color);
             border-radius: 10px;
-            padding: 15px;
+            padding: clamp(10px, 2vw, 15px); /* 内边距自适应 */
             background-color: var(--group-bg-color);
             width: 100%; /* 占满容器宽度 */
-            max-width: 600px; /* 限制分组最大宽度 */
+            min-width: var(--group-min-width); /* 小屏不挤压 */
+            max-width: 100%; /* 不超出容器 */
+            box-sizing: border-box; /* 边框计入宽度，避免超出 */
         }
 
         /* 分组标题样式 */
         .group-title {
-            text-align: left; /* 标题左对齐，匹配整体布局 */
+            text-align: left;
             font-size: var(--group-font-size);
             margin-bottom: 10px;
             font-weight: 600;
+            padding: 0 2px; /* 微小内边距，避免贴边 */
         }
 
-        /* 分组色块样式（仿按钮） */
+        /* 分组色块样式 */
         .group-color-block {
-            margin: 0 0 15px 0; /* 左对齐，取消居中 */
+            margin: 0 0 15px 0;
             width: fit-content;
             padding: var(--block-padding);
             border-radius: var(--block-border-radius);
-            color: white; /* 色块文字白色 */
+            color: white;
             font-size: 0.9rem;
             text-align: center;
         }
@@ -121,54 +135,59 @@
         #group4 .group-color-block { background-color: var(--group4-block-color); }
         #group5 .group-color-block { background-color: var(--group5-block-color); }
 
-        /* 按钮容器 - 横向排列 */
+        /* 按钮容器 - 自适应换行 */
         .button-row {
             display: flex;
-            gap: 8px; /* 按钮之间的间距 */
-            flex-wrap: wrap; /* 小屏幕自动换行 */
+            gap: clamp(5px, 1vw, 8px); /* 按钮间距自适应 */
+            flex-wrap: wrap;
+            padding: 0 2px; /* 避免按钮贴边框 */
         }
 
-        /* 按钮样式 */
+        /* 按钮样式 - 自适应 */
         .sound-button {
-            padding: 10px 15px;
+            padding: clamp(8px, 1.5vw, 10px) clamp(10px, 2vw, 15px); /* 内边距自适应 */
             border: none;
-            border-radius: var(--block-border-radius); /* 和色块统一圆角 */
+            border-radius: var(--block-border-radius);
             background-color: var(--button-bg-color);
             color: var(--button-text-color);
             font-size: var(--button-font-size);
             cursor: pointer;
             transition: opacity 0.3s;
-            white-space: nowrap; /* 按钮文字不换行 */
+            white-space: nowrap;
+            flex-shrink: 0; /* 防止按钮被挤压变形 */
         }
 
         .sound-button:hover {
             opacity: 0.9;
         }
 
-        /* 底部文本区域 */
+        /* 底部文本区域 - 自适应 */
         .footer-texts {
             display: flex;
-            justify-content: space-around;
-            margin: 40px 0 20px;
+            justify-content: center; /* 居中更适配 */
+            gap: clamp(15px, 3vw, 20px);
+            margin: 40px auto 20px;
             flex-wrap: wrap;
-            gap: 20px;
-            max-width: 800px; /* 和分组容器对齐 */
+            width: 100%;
+            max-width: var(--group-max-width); /* 和分组容器对齐 */
         }
 
         .text-module {
-            width: 300px;
+            width: clamp(280px, 30vw, 300px); /* 自适应宽度 */
             color: var(--footer-text-color);
             font-size: var(--footer-font-size);
             line-height: 1.6;
+            padding: 0 5px;
         }
 
-        /* 滚动文字样式 */
+        /* 滚动文字样式 - 自适应 */
         .marquee-container {
-            margin-top: 20px;
-            padding: 10px;
+            margin: 20px auto;
+            padding: clamp(8px, 1.5vw, 10px);
             background-color: rgba(0,0,0,0.05);
             border-radius: 5px;
-            max-width: 800px; /* 和分组容器对齐 */
+            width: 100%;
+            max-width: var(--group-max-width); /* 和分组容器对齐 */
         }
 
         .marquee-text {
@@ -184,31 +203,18 @@
             100% { transform: translateX(-100%); }
         }
 
-        /* 响应式适配 */
-        @media (max-width: 768px) {
-            .button-groups {
-                align-items: center; /* 移动端分组居中 */
-                width: 90%;
-                margin: 30px auto;
-            }
-            .button-group {
-                width: 100%;
+        /* 极端小屏适配（如手机竖屏） */
+        @media (max-width: 480px) {
+            :root {
+                --title-font-size: 1.8rem; /* 缩小标题 */
+                --group-font-size: 1rem; /* 缩小分组标题 */
             }
             .button-row {
-                flex-direction: column; /* 移动端按钮纵向排列 */
+                flex-direction: column; /* 按钮纵向排列 */
             }
             .sound-button {
-                width: 100%;
-            }
-            .footer-texts {
-                flex-direction: column;
-                align-items: center;
-                width: 90%;
-                margin: 40px auto 20px;
-            }
-            .marquee-container {
-                width: 90%;
-                margin: 20px auto;
+                width: 100%; /* 按钮占满宽度 */
+                white-space: normal; /* 允许文字换行 */
             }
         }
     </style>
@@ -224,9 +230,9 @@
         <img src="https://picsum.photos/200/150?random=3" alt="素材3" class="custom-image">
     </div>
 
-    <!-- 按钮分组区域 - 左对齐、垂直堆叠 -->
+    <!-- 按钮分组区域 -->
     <div class="button-groups">
-        <!-- 分组1（最上方，左对齐） -->
+        <!-- 分组1 -->
         <div class="button-group" id="group1">
             <h2 class="group-title">分组1</h2>
             <div class="group-color-block">分组1标识色块</div>
@@ -236,15 +242,10 @@
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.mp3">测试3</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-retro-arcade-game-over-470.mp3">测试4</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
-                <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
-                <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
-                <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
-                <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
-                <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
             </div>
         </div>
 
-        <!-- 分组2（独立一行） -->
+        <!-- 分组2 -->
         <div class="button-group" id="group2">
             <h2 class="group-title">分组2</h2>
             <div class="group-color-block">分组2标识色块</div>
@@ -257,7 +258,7 @@
             </div>
         </div>
 
-        <!-- 分组3（独立一行） -->
+        <!-- 分组3 -->
         <div class="button-group" id="group3">
             <h2 class="group-title">分组3</h2>
             <div class="group-color-block">分组3标识色块</div>
@@ -270,7 +271,7 @@
             </div>
         </div>
 
-        <!-- 分组4（独立一行） -->
+        <!-- 分组4 -->
         <div class="button-group" id="group4">
             <h2 class="group-title">分组4</h2>
             <div class="group-color-block">分组4标识色块</div>
@@ -283,7 +284,7 @@
             </div>
         </div>
 
-        <!-- 分组5（独立一行） -->
+        <!-- 分组5 -->
         <div class="button-group" id="group5">
             <h2 class="group-title">分组5</h2>
             <div class="group-color-block">分组5标识色块</div>
