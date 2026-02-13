@@ -310,35 +310,6 @@ body {
         width: 100%;
     }
 }
-        /* 临时开发文本 - 正式上线删除 */
-.temp-dev-text {
-    /* 固定在页面最右侧，不随滚动消失 */
-    position: fixed;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    /* 样式：醒目但不刺眼，区分正式内容 */
-    background-color: rgba(255, 255, 0, 0.8); /* 半透明黄色 */
-    color: #e53e3e; /* 红色文字，醒目 */
-    padding: 15px 10px;
-    border-radius: 8px;
-    font-size: 0.8rem;
-    font-weight: bold;
-    /* 层级最高，确保显示在最上层 */
-    z-index: 9999;
-    /* 窄屏自动隐藏，避免挤压核心内容 */
-    display: block;
-    /* 可选：添加旋转，更易识别是临时文本 */
-    writing-mode: vertical-rl; /* 文字竖排，节省横向空间 */
-    white-space: nowrap;
-}
-
-/* 小屏适配：隐藏临时文本，避免干扰移动端布局 */
-@media (max-width: 768px) {
-    .temp-dev-text {
-        display: none;
-    }
-}
     </style>
 </head>
 <body>
@@ -606,9 +577,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
          
     </script>
-    <!-- 临时开发文本 - 正式上线删除 -->
-<div class="temp-dev-text">
-    开发中临时文本 | 正式版删除 | 请勿外传
-</div>
 </body>
 </html>
