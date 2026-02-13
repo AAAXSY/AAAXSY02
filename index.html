@@ -336,7 +336,7 @@ body {
             <div class="button-row">
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-click-1117.mp3">耶~</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3">谢谢~谢谢~</button>
-                <button class="sound-button" data-sound="https://raw.githubusercontent.com/AAAXSY/AAAXSY02/main/A/esila.mp3">饿死啦</button>
+                <button class="sound-button" data-sound="https://raw.githubusercontent.com/AAAXSY/AAAXSY02/main/A/esila.mp3"" data-volume=0.5">饿死啦</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-retro-arcade-game-over-470.mp3">测试4</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
                 <button class="sound-button" data-sound="https://assets.mixkit.co/sfx/preview/mixkit-video-game-win-2016.mp3">测试5</button>
@@ -508,7 +508,7 @@ body {
     </div>
 
     <script>
-      // 全局音频控制变量（新增）
+     // 全局音频控制变量
 let currentAudio = null;
 let playInterval = null;
 let soundButtons = [];
@@ -516,17 +516,25 @@ let soundButtons = [];
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('.sound-button');
     
-    // 1. 收集所有音频按钮的src（新增）
-    soundButtons = Array.from(buttons).map(btn => btn.getAttribute('data-sound'));
+    // 1. 重构soundButtons数组，同时保存音频地址和对应音量（核心修改）
+    soundButtons = Array.from(buttons).map(btn => ({
+        src: btn.getAttribute('data-sound'),
+        // 读取自定义音量属性，默认1.0（最大音量）
+        volume: parseFloat(btn.getAttribute('data-volume')) || 1.0
+    }));
 
-    // 2. 原有单个按钮播放逻辑（优化）
+    // 2. 单个按钮点击播放逻辑（新增音量设置）
     buttons.forEach(button => {
         button.addEventListener('click', () => {
             // 点击单个按钮时先停止自动播放
             document.querySelector('.stop-btn').click();
             
             const soundSrc = button.getAttribute('data-sound');
+            // 读取当前按钮的自定义音量，无设置则默认1.0
+            const btnVolume = parseFloat(button.getAttribute('data-volume')) || 1.0;
+            
             currentAudio = new Audio(soundSrc);
+            currentAudio.volume = btnVolume; // 应用自定义音量
             currentAudio.play().catch(error => {
                 console.error('播放音效失败:', error);
                 alert('音效播放失败，请检查网络或浏览器设置');
@@ -534,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 3. 停止播放功能（新增）
+    // 3. 停止播放功能（无修改）
     document.querySelector('.stop-btn').addEventListener('click', () => {
         if (currentAudio) {
             currentAudio.pause();
@@ -546,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. 顺序播放功能（新增）
+    // 4. 顺序播放功能（新增音量设置）
     document.querySelector('.seq-btn').addEventListener('click', () => {
         // 先停止现有播放
         document.querySelector('.stop-btn').click();
@@ -557,25 +565,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(playInterval);
                 return;
             }
-            currentAudio = new Audio(soundButtons[index]);
+            // 读取对应音频的地址和自定义音量
+            currentAudio = new Audio(soundButtons[index].src);
+            currentAudio.volume = soundButtons[index].volume; // 应用自定义音量
             currentAudio.play().catch(err => console.error('播放失败:', err));
             index++;
         }, 1500); // 每1.5秒播放下一个，可改时间
     });
 
-    // 5. 随机播放功能（新增）
+    // 5. 随机播放功能（新增音量设置）
     document.querySelector('.rand-btn').addEventListener('click', () => {
         // 先停止现有播放
         document.querySelector('.stop-btn').click();
         
         playInterval = setInterval(() => {
             const randomIndex = Math.floor(Math.random() * soundButtons.length);
-            currentAudio = new Audio(soundButtons[randomIndex]);
+            // 读取随机音频的地址和自定义音量
+            currentAudio = new Audio(soundButtons[randomIndex].src);
+            currentAudio.volume = soundButtons[randomIndex].volume; // 应用自定义音量
             currentAudio.play().catch(err => console.error('播放失败:', err));
         }, 1500); // 每1.5秒随机播放，可改时间
     });
-});
-         
     </script>
 </body>
 </html>
