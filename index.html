@@ -228,6 +228,43 @@ body {
     padding: 0 5px;
 }
 
+   /* 新增跳转按钮容器样式 */
+.jump-buttons {
+    display: flex;
+    justify-content: center;
+    gap: clamp(10px, 2vw, 15px);
+    margin: 20px auto;
+    width: 100%;
+    max-width: var(--group-max-width);
+    flex-wrap: wrap;
+    padding: 0 10px;
+}
+
+/* 新增跳转按钮样式（复用原有按钮设计） */
+.jump-btn {
+    padding: clamp(8px, 1.5vw, 10px) clamp(20px, 3vw, 25px);
+    border: none;
+    border-radius: var(--block-border-radius);
+    background-color: var(--button-bg-color);
+    color: var(--button-text-color);
+    font-size: var(--button-font-size);
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.2s;
+    white-space: nowrap;
+    text-decoration: none; /* 去除链接下划线 */
+    display: inline-block; /* 让a标签支持按钮样式 */
+}
+
+.jump-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+/* 可选：给不同跳转按钮自定义颜色（区分功能） */
+.jump-btn-1 { background-color: #4299e1; } /* 蓝色（默认） */
+.jump-btn-2 { background-color: #38a169; } /* 绿色 */
+.jump-btn-3 { background-color: #805ad5; } /* 紫色 */
+        
 /* 滚动文字样式 - 自适应 */
 .marquee-container {
     margin: 20px auto;
@@ -456,6 +493,14 @@ body {
     </td>
   </tr>
 </table>
+
+    <!-- 新增跳转按钮区域（核心） -->
+<div class="jump-buttons">
+    <!-- 替换href里的网址为你要跳转的链接，修改按钮文字 -->
+    <a href="https://www.bilibili.com" class="jump-btn jump-btn-1" target="_blank">B站主页</a>
+    <a href="https://github.com" class="jump-btn jump-btn-2" target="_blank">GitHub</a>
+    <a href="https://www.baidu.com" class="jump-btn jump-btn-3" target="_blank">百度</a>
+</div>
 
     <!-- 滚动文字区域 -->
     <div class="marquee-container">
