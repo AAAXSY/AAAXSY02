@@ -8,6 +8,11 @@
     <style>
         /* 全局样式 - 可自定义修改 */
         :root {
+
+             --control-btn-seq: #38a169;
+             --control-btn-rand: #9f7aea;
+             --control-btn-stop: #e53e3e;
+}
             /* 基础颜色配置 */
             --bg-color: #f0f4f8;
             --border-color: #2d3748;
@@ -85,7 +90,41 @@
             border: 2px solid var(--border-color);
             border-radius: 8px;
         }
-        
+
+
+        /* 新增播放控制按钮容器（直接加） */
+.play-controls {
+    display: flex;
+    justify-content: center;
+    gap: clamp(10px, 2vw, 15px);
+    margin: 20px auto;
+    width: 100%;
+    max-width: var(--group-max-width);
+    flex-wrap: wrap;
+}
+
+/* 新增控制按钮样式（直接加） */
+.control-btn {
+    padding: clamp(10px, 1.5vw, 12px) clamp(20px, 3vw, 25px);
+    border: none;
+    border-radius: var(--block-border-radius);
+    color: white;
+    font-size: var(--button-font-size);
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.2s;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.control-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.seq-btn { background-color: var(--control-btn-seq); }
+.rand-btn { background-color: var(--control-btn-rand); }
+.stop-btn { background-color: var(--control-btn-stop); }
+
         /* 按钮分组容器 - 完全自适应 */
         .button-groups {
             display: flex;
@@ -248,6 +287,11 @@
         <img src="https://raw.githubusercontent.com/AAAXSY/AAAXSY02/main/B/屏幕截图 2026-02-12 011549.png">
         <img src="https://raw.githubusercontent.com/AAAXSY/AAAXSY02/main/B/屏幕截图 2026-02-12 011549.png">
     </div>
+<div class="play-controls">
+    <button class="control-btn seq-btn">顺序播放</button>
+    <button class="control-btn rand-btn">随机播放</button>
+    <button class="control-btn stop-btn">停止播放</button>
+</div>
 
     <!-- 按钮分组区域 -->
     <div class="button-groups">
@@ -421,20 +465,74 @@
     </div>
 
     <script>
-        // 声音播放逻辑
-        document.addEventListener('DOMContentLoaded', () => {
-            const buttons = document.querySelectorAll('.sound-button');
-            buttons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const soundSrc = button.getAttribute('data-sound');
-                    const audio = new Audio(soundSrc);
-                    audio.play().catch(error => {
-                        console.error('播放音效失败:', error);
-                        alert('音效播放失败，请检查网络或浏览器设置');
-                    });
-                });
+      // 全局音频控制变量（新增）
+let currentAudio = null;
+let playInterval = null;
+let soundButtons = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.sound-button');
+    
+    // 1. 收集所有音频按钮的src（新增）
+    soundButtons = Array.from(buttons).map(btn => btn.getAttribute('data-sound'));
+
+    // 2. 原有单个按钮播放逻辑（优化）
+    buttons.forEach(button => {
+        button.addEventListener('click', () => {
+            // 点击单个按钮时先停止自动播放
+            document.querySelector('.stop-btn').click();
+            
+            const soundSrc = button.getAttribute('data-sound');
+            currentAudio = new Audio(soundSrc);
+            currentAudio.play().catch(error => {
+                console.error('播放音效失败:', error);
+                alert('音效播放失败，请检查网络或浏览器设置');
             });
         });
+    });
+
+    // 3. 停止播放功能（新增）
+    document.querySelector('.stop-btn').addEventListener('click', () => {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        if (playInterval) {
+            clearInterval(playInterval);
+            playInterval = null;
+        }
+    });
+
+    // 4. 顺序播放功能（新增）
+    document.querySelector('.seq-btn').addEventListener('click', () => {
+        // 先停止现有播放
+        document.querySelector('.stop-btn').click();
+        let index = 0;
+        
+        playInterval = setInterval(() => {
+            if (index >= soundButtons.length) {
+                clearInterval(playInterval);
+                return;
+            }
+            currentAudio = new Audio(soundButtons[index]);
+            currentAudio.play().catch(err => console.error('播放失败:', err));
+            index++;
+        }, 1500); // 每1.5秒播放下一个，可改时间
+    });
+
+    // 5. 随机播放功能（新增）
+    document.querySelector('.rand-btn').addEventListener('click', () => {
+        // 先停止现有播放
+        document.querySelector('.stop-btn').click();
+        
+        playInterval = setInterval(() => {
+            const randomIndex = Math.floor(Math.random() * soundButtons.length);
+            currentAudio = new Audio(soundButtons[randomIndex]);
+            currentAudio.play().catch(err => console.error('播放失败:', err));
+        }, 1500); // 每1.5秒随机播放，可改时间
+    });
+});
+         
     </script>
 </body>
 </html>
