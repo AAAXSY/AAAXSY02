@@ -810,29 +810,49 @@ document.addEventListener('DOMContentLoaded', function() {
         playNextSequenceAudio();
     });
 
-    // 4. 随机播放（原有逻辑保留）
-    document.querySelector('.rand-btn').addEventListener('click', function() {
-        stopAllPlayback();
-        isPlayingRandom = true;
-
-        function playRandomAudio() {
-            if (!isPlayingRandom) return;
-            const randomIndex = Math.floor(Math.random() * soundButtons.length);
-            const audioItem = soundButtons[randomIndex];
-            if (!audioItem.src) {
-                playRandomAudio();
-                return;
-            }
-            currentAudio = new Audio(audioItem.src);
-            currentAudio.volume = audioItem.volume;
-            currentAudio.addEventListener('ended', onAudioEnded);
-            currentAudio.play().catch(err => {
-                console.warn('随机播放失败:', err);
-                playRandomAudio();
-            });
+  // 4. 随机播放（修改后：前一个结束自动播放下一个）
+document.querySelector('.rand-btn').addEventListener('click', function() {
+    stopAllPlayback(); // 先停止所有正在播放的音频
+    isPlayingRandom = true; // 标记为随机播放状态
+    
+    // 定义独立的随机播放函数，用于音频结束后递归调用
+    function playRandomAudio() {
+        // 如果已停止随机播放，直接退出
+        if (!isPlayingRandom) return;
+        
+        // 过滤掉无音频链接的项，避免播放空链接
+        const validSounds = soundButtons.filter(item => item.src && item.src.trim() !== '');
+        if (validSounds.length === 0) {
+            stopAllPlayback(); // 无有效音频则停止
+            alert('没有可播放的音频资源');
+            return;
         }
-        playRandomAudio();
-    });
+        
+        // 随机选取一个有效音频
+        const randomIndex = Math.floor(Math.random() * validSounds.length);
+        const audioItem = validSounds[randomIndex];
+        
+        // 创建新的音频实例
+        currentAudio = new Audio(audioItem.src);
+        currentAudio.volume = audioItem.volume;
+        
+        // 关键：监听音频播放结束事件，结束后自动播放下一个
+        currentAudio.addEventListener('ended', function() {
+            // 音频播放完毕后，递归调用自身，继续播放下一个随机音频
+            playRandomAudio();
+        });
+        
+        // 播放音频（捕获播放错误）
+        currentAudio.play().catch(err => {
+            console.warn('随机播放失败:', err);
+            // 播放失败时，直接尝试播放下一个
+            playRandomAudio();
+        });
+    }
+    
+    // 启动第一个随机音频播放
+    playRandomAudio();
+});
 
     // 5. 停止按钮（原有逻辑保留）
     document.querySelector('.stop-btn').addEventListener('click', stopAllPlayback);
