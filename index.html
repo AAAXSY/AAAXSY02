@@ -3,6 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一键回到顶部</title>
+    <style>
+        /* 移除了强制的height: 3000px，保留基础样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            /* 可选：添加一些内边距，让内容不贴边 */
+            padding-bottom: 50px;
+        }
+
+        /* 回到顶部按钮样式不变 */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            transition: background-color 0.3s ease;
+            z-index: 9999;
+        }
+
+        .back-to-top:hover {
+            background-color: #0056b3;
+        }
+
+        .back-to-top::after {
+            content: "↑";
+        }
+
+        /* 可选：添加一些测试内容，模拟长页面（不会产生空白） */
+        .content {
+            height: auto; /* 高度由内容决定 */
+            min-height: 100vh; /* 至少占满视口高度，避免短页面 */
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AAAXSY02</title>
     
     <style>
@@ -737,18 +791,13 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
 </head>
 <body>
-    <h1>页面顶部</h1>
-    
     <!-- 回到顶部按钮 -->
     <div class="back-to-top" id="backToTopBtn"></div>
 
     <script>
-        // 获取回到顶部按钮元素
         const backToTopBtn = document.getElementById('backToTopBtn');
 
-        // 监听页面滚动事件
         window.addEventListener('scroll', function() {
-            // 当页面滚动距离超过300px时显示按钮，否则隐藏
             if (window.pageYOffset > 300) {
                 backToTopBtn.style.display = "block";
             } else {
@@ -756,12 +805,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // 点击按钮回到顶部
         backToTopBtn.addEventListener('click', function() {
-            // 平滑滚动到顶部
             window.scrollTo({
                 top: 0,
-                behavior: 'smooth' // 平滑滚动效果
+                behavior: 'smooth'
             });
         });
     </script>
