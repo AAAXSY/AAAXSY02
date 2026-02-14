@@ -687,3 +687,83 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一键回到顶部</title>
+    <style>
+        /* 页面基础样式，仅用于演示长页面效果 */
+        body {
+            height: 3000px; /* 制造长页面 */
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* 回到顶部按钮样式 */
+        .back-to-top {
+            /* 固定定位，始终显示在屏幕右下角 */
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            /* 按钮样式 */
+            width: 50px;
+            height: 50px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            /* 初始隐藏 */
+            display: none;
+            /* 鼠标悬浮效果 */
+            transition: background-color 0.3s ease;
+            /* 防止按钮被遮挡 */
+            z-index: 9999;
+        }
+
+        .back-to-top:hover {
+            background-color: #0056b3;
+        }
+
+        /* 可选：添加向上箭头图标（替代文字） */
+        .back-to-top::after {
+            content: "↑";
+        }
+    </style>
+</head>
+<body>
+    <h1>页面顶部</h1>
+    
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTopBtn"></div>
+
+    <script>
+        // 获取回到顶部按钮元素
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        // 监听页面滚动事件
+        window.addEventListener('scroll', function() {
+            // 当页面滚动距离超过300px时显示按钮，否则隐藏
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        });
+
+        // 点击按钮回到顶部
+        backToTopBtn.addEventListener('click', function() {
+            // 平滑滚动到顶部
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth' // 平滑滚动效果
+            });
+        });
+    </script>
+</body>
+</html>
