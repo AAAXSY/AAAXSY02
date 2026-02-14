@@ -508,10 +508,12 @@ body {
     </div>
 
     <script>
-    // 全局音频控制变量
+   // 全局音频控制变量
 let currentAudio = null;
-let playInterval = null;
+let playTimer = null; // 统一管理定时器（替代原playInterval，语义更清晰）
 let soundButtons = [];
+let isPlayingSequence = false; // 标记是否正在顺序播放
+let isPlayingRandom = false; // 标记是否正在随机播放
 
 // 等待页面完全加载
 document.addEventListener('DOMContentLoaded', function() {
@@ -520,7 +522,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 2. 初始化音频列表（兼容无data-volume的情况）
     soundButtons = Array.from(buttons).map(function(btn) {
-        // 容错：如果没有data-volume，默认1.0；如果值非法，也默认1.0
         const volume = parseFloat(btn.getAttribute('data-volume'));
         return {
             src: btn.getAttribute('data-sound'),
@@ -531,15 +532,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 3. 单个按钮点击播放（核心：确保用户交互后播放）
     buttons.forEach(function(button) {
         button.addEventListener('click', function() {
-            // 先停止之前的播放
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-            if (playInterval) {
-                clearInterval(playInterval);
-                playInterval = null;
-            }
+            // 先停止所有播放（包括顺序/随机）
+            stopAllPlayback();
 
             // 读取音频地址和音量（容错处理）
             const soundSrc = button.getAttribute('data-sound');
@@ -549,8 +543,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 播放音频（加容错提示）
             try {
                 currentAudio = new Audio(soundSrc);
-                currentAudio.volume = finalVolume; // 设置自定义音量
-                // 强制允许播放（兼容部分浏览器）
+                currentAudio.volume = finalVolume;
                 currentAudio.play().then(function() {
                     console.log('音频播放成功:', soundSrc);
                 }).catch(function(error) {
@@ -563,96 +556,132 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 4. 停止播放按钮
-    document.querySelector('.stop-btn').addEventListener('click', function() {
+    // 4. 统一的停止播放函数（核心：所有停止逻辑集中管理）
+    function stopAllPlayback() {
+        // 1. 立即暂停当前播放的音频
         if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
+            currentAudio.pause(); // 暂停播放
+            currentAudio.currentTime = 0; // 重置播放进度到开头
+            // 移除所有事件监听（避免残留）
+            currentAudio.removeEventListener('ended', onAudioEnded);
+            currentAudio = null; // 清空引用
         }
-        if (playInterval) {
-            clearInterval(playInterval);
-            playInterval = null;
+
+        // 2. 清除定时器（终止随机播放/旧版顺序播放）
+        if (playTimer) {
+            clearInterval(playTimer);
+            clearTimeout(playTimer); // 兼容setTimeout的情况
+            playTimer = null;
         }
+
+        // 3. 重置播放状态标记
+        isPlayingSequence = false;
+        isPlayingRandom = false;
+
+        console.log('所有播放已停止');
+    }
+
+    // 音频播放结束的通用回调（解决作用域问题）
+    function onAudioEnded() {
+        if (isPlayingSequence) {
+            playNextSequenceAudio(); // 顺序播放下一个
+        } else if (isPlayingRandom) {
+            playRandomAudio(); // 随机播放下一个
+        }
+    }
+
+    // 5. 顺序播放（优化：播放完一个再播下一个，可被停止）
+    document.querySelector('.seq-btn').addEventListener('click', function() {
+        // 先停止现有播放
+        stopAllPlayback();
+        
+        isPlayingSequence = true; // 标记为顺序播放中
+        let index = 0; // 当前要播放的音频索引
+
+        // 定义顺序播放下一个音频的函数
+        function playNextSequenceAudio() {
+            // 如果已被停止，直接退出
+            if (!isPlayingSequence) return;
+
+            // 边界判断：索引超出音频列表，结束播放
+            if (index >= soundButtons.length) {
+                stopAllPlayback(); // 播放完毕，重置状态
+                return;
+            }
+
+            // 获取当前要播放的音频项
+            const audioItem = soundButtons[index];
+            if (!audioItem || !audioItem.src) {
+                console.log(`第${index+1}个音频无有效播放源，跳过`);
+                index++;
+                playNextSequenceAudio();
+                return;
+            }
+
+            // 创建并播放当前音频
+            currentAudio = new Audio(audioItem.src);
+            currentAudio.volume = audioItem.volume || 1;
+
+            // 监听播放结束事件（绑定通用回调）
+            currentAudio.addEventListener('ended', onAudioEnded);
+
+            // 播放音频
+            currentAudio.play().catch(function(err) {
+                console.log(`第${index+1}个音频播放失败，跳过:`, err);
+                index++;
+                playNextSequenceAudio();
+            });
+
+            index++; // 提前递增索引（避免重复播放）
+        }
+
+        // 启动第一个音频的播放
+        playNextSequenceAudio();
     });
 
-    // 5. 顺序播放（加容错）
-  // 5. 顺序播放（优化：播放完一个再播放下一个，加强容错）
-document.querySelector('.seq-btn').addEventListener('click', function() {
-    // 先停止现有播放（包括可能正在进行的顺序播放）
-    document.querySelector('.stop-btn').click();
-    let index = 0; // 当前要播放的音频索引
-
-    // 定义递归播放函数：播放当前音频，播放完自动播下一个
-    function playNextAudio() {
-        // 边界判断：索引超出音频列表，结束播放
-        if (index >= soundButtons.length) {
-            currentAudio = null; // 清空当前音频引用
-            return;
-        }
-
-        // 获取当前要播放的音频项
-        const audioItem = soundButtons[index];
-        // 容错：检查音频源是否存在
-        if (!audioItem || !audioItem.src) {
-            console.log(`第${index+1}个音频无有效播放源，跳过`);
-            index++; // 索引递增，继续下一个
-            playNextAudio(); // 递归调用，播放下一个
-            return;
-        }
-
-        // 创建并播放当前音频
-        currentAudio = new Audio(audioItem.src);
-        currentAudio.volume = audioItem.volume || 1; // 容错：默认音量1
-
-        // 监听音频播放结束事件：播放完后自动播下一个
-        currentAudio.addEventListener('ended', function() {
-            index++; // 索引递增
-            playNextAudio(); // 递归调用，播放下一个
-        });
-
-        // 播放音频，捕获播放失败的异常
-        currentAudio.play().catch(function(err) {
-            console.log(`第${index+1}个音频播放失败，跳过:`, err);
-            index++; // 索引递增
-            playNextAudio(); // 即使播放失败，也继续下一个
-        });
-    }
-
-    // 启动第一个音频的播放
-    playNextAudio();
-});
-
-// 补充：停止按钮的逻辑（需确保能终止顺序播放）
-document.querySelector('.stop-btn').addEventListener('click', function() {
-    // 停止当前正在播放的音频
-    if (currentAudio) {
-        currentAudio.pause(); // 暂停播放
-        currentAudio.removeEventListener('ended', playNextAudio); // 移除结束事件监听
-        currentAudio = null; // 清空引用
-    }
-    // 若有遗留的interval（原代码），也清空（兼容旧逻辑）
-    if (playInterval) {
-        clearInterval(playInterval);
-        playInterval = null;
-    }
-});
-
-    // 6. 随机播放（加容错）
+    // 6. 随机播放（优化：播放完一个再随机播下一个，可被停止）
     document.querySelector('.rand-btn').addEventListener('click', function() {
         // 先停止现有播放
-        document.querySelector('.stop-btn').click();
+        stopAllPlayback();
+        
+        isPlayingRandom = true; // 标记为随机播放中
 
-        playInterval = setInterval(function() {
+        // 定义随机播放单个音频的函数
+        function playRandomAudio() {
+            // 如果已被停止，直接退出
+            if (!isPlayingRandom) return;
+
+            // 随机选一个音频
             const randomIndex = Math.floor(Math.random() * soundButtons.length);
             const audioItem = soundButtons[randomIndex];
-            if (audioItem.src) {
-                currentAudio = new Audio(audioItem.src);
-                currentAudio.volume = audioItem.volume;
-                currentAudio.play().catch(function(err) {
-                    console.log('随机播放失败（跳过）:', err);
-                });
+            
+            if (!audioItem || !audioItem.src) {
+                console.log('随机选中的音频无有效播放源，重新随机');
+                playRandomAudio(); // 重新选一个
+                return;
             }
-        }, 1500);
+
+            // 创建并播放音频
+            currentAudio = new Audio(audioItem.src);
+            currentAudio.volume = audioItem.volume || 1;
+
+            // 监听播放结束事件（绑定通用回调）
+            currentAudio.addEventListener('ended', onAudioEnded);
+
+            // 播放音频
+            currentAudio.play().catch(function(err) {
+                console.log('随机播放失败，重新随机:', err);
+                playRandomAudio();
+            });
+        }
+
+        // 启动第一个随机音频的播放
+        playRandomAudio();
+    });
+
+    // 7. 停止按钮绑定事件（调用统一的停止函数）
+    document.querySelector('.stop-btn').addEventListener('click', function() {
+        stopAllPlayback();
     });
 });
     </script>
