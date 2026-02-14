@@ -821,8 +821,8 @@ document.querySelector('.rand-btn').addEventListener('click', function() {
     this.disabled = true;
     this.style.opacity = "0.7";
 
-    // 定义间距时间（毫秒），可自行修改：比如 500=0.5秒，2000=2秒
-    const audioInterval = 0; // 核心：调整这里的数值改变音频间距
+    // 定义间距时间（0.1秒 = 100毫秒）
+    const audioInterval = 100; // 核心：已改为0.1秒
 
     function playRandomAudio() {
         if (!isPlayingRandom) {
@@ -846,22 +846,22 @@ document.querySelector('.rand-btn').addEventListener('click', function() {
         currentAudio = new Audio(audioItem.src);
         currentAudio.volume = audioItem.volume;
 
-        // 音频结束后延迟指定时间再播放下一个
+        // 音频结束后延迟0.1秒再播放下一个
         currentAudio.addEventListener('ended', function() {
             currentAudio = null;
-            // 延迟执行下一个
+            // 延迟执行下一个（0.1秒）
             setTimeout(() => {
                 playRandomAudio();
-            }, audioInterval); // 使用定义的间距时间
+            }, audioInterval); // 使用0.1秒的间距
         });
 
         currentAudio.play().catch(err => {
             console.warn('随机播放失败:', err);
             currentAudio = null;
-            // 播放失败也延迟后重试
+            // 播放失败后延迟0.1秒重试
             setTimeout(() => {
                 playRandomAudio();
-            }, audioInterval);
+            }, audioInterval); // 同样使用0.1秒的间距
         });
     }
 
