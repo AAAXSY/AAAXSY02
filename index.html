@@ -645,8 +645,26 @@ body {
         <div class="marquee-text">声明：如有与其他同类型网站雷同纯属巧合，粉丝二创网站，禁止外传该网站，禁止擅自使用网站中美术音频素材，禁止向其他主播提及该网站！！！</div>
     </div>
 
-    <script>
+    <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTopBtn"></div>
 
+    <script>
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
+        });
+
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
       // 全局音频控制变量（保留原有）
 let currentAudio = null;
 let playTimer = null;
@@ -821,27 +839,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 6. 初始化预缓存（新增：放在最后，不影响播放）
     initResourceCache();
+       });
 
-  <!-- 回到顶部按钮 -->
-    <div class="back-to-top" id="backToTopBtn"></div>
 
-    <script>
-        const backToTopBtn = document.getElementById('backToTopBtn');
-
-        window.addEventListener('scroll', function() {
-            if (window.pageYOffset > 300) {
-                backToTopBtn.style.display = "block";
-            } else {
-                backToTopBtn.style.display = "none";
-            }
-        });
-
-        backToTopBtn.addEventListener('click', function() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
     </script>
 </body>
 </html>
