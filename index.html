@@ -810,61 +810,61 @@ document.addEventListener('DOMContentLoaded', function() {
         playNextSequenceAudio();
     });
 
-// 4. 随机播放（优化版：防重复点击 + 结束自动续播 + 停止可终止）
+// 4. 随机播放（带间距控制 + 防重复点击 + 自动续播）
 document.querySelector('.rand-btn').addEventListener('click', function() {
-    // 核心：如果正在随机播放，点击后直接返回，避免重复触发
     if (isPlayingRandom) {
         return;
     }
 
-    stopAllPlayback(); // 先停止所有正在播放的音频
-    isPlayingRandom = true; // 标记为随机播放状态
-    this.disabled = true; // 可选：禁用按钮，视觉上提示正在播放（体验优化）
-    this.style.opacity = "0.7"; // 按钮变灰，提示不可点击
+    stopAllPlayback();
+    isPlayingRandom = true;
+    this.disabled = true;
+    this.style.opacity = "0.7";
 
-    // 定义随机播放核心函数（递归调用实现自动续播）
+    // 定义间距时间（毫秒），可自行修改：比如 500=0.5秒，2000=2秒
+    const audioInterval = 1000; // 核心：调整这里的数值改变音频间距
+
     function playRandomAudio() {
-        // 终止条件：如果已停止随机播放，恢复按钮状态并退出
         if (!isPlayingRandom) {
-            document.querySelector('.rand-btn').disabled = false; // 恢复按钮
-            document.querySelector('.rand-btn').style.opacity = "1"; // 恢复样式
+            document.querySelector('.rand-btn').disabled = false;
+            document.querySelector('.rand-btn').style.opacity = "1";
             return;
         }
 
-        // 过滤有效音频（排除空链接）
         const validSounds = soundButtons.filter(item => item.src && item.src.trim() !== '');
         if (validSounds.length === 0) {
-            stopAllPlayback(); // 无有效音频则停止
+            stopAllPlayback();
             alert('没有可播放的音频资源');
             document.querySelector('.rand-btn').disabled = false;
             document.querySelector('.rand-btn').style.opacity = "1";
             return;
         }
 
-        // 随机选取一个有效音频
         const randomIndex = Math.floor(Math.random() * validSounds.length);
         const audioItem = validSounds[randomIndex];
 
-        // 创建新音频实例
         currentAudio = new Audio(audioItem.src);
         currentAudio.volume = audioItem.volume;
 
-        // 监听音频结束事件：播放完自动续播下一个随机音频
+        // 音频结束后延迟指定时间再播放下一个
         currentAudio.addEventListener('ended', function() {
-            // 先清空当前音频实例，再递归调用
             currentAudio = null;
-            playRandomAudio(); // 核心：自动播放下一个
+            // 延迟执行下一个
+            setTimeout(() => {
+                playRandomAudio();
+            }, audioInterval); // 使用定义的间距时间
         });
 
-        // 播放音频（捕获错误，失败则直接续播下一个）
         currentAudio.play().catch(err => {
             console.warn('随机播放失败:', err);
             currentAudio = null;
-            playRandomAudio(); // 播放失败也续播，保证流程不中断
+            // 播放失败也延迟后重试
+            setTimeout(() => {
+                playRandomAudio();
+            }, audioInterval);
         });
     }
 
-    // 启动第一个随机音频
     playRandomAudio();
 });
     
