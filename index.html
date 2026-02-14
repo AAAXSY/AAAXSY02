@@ -647,87 +647,93 @@ body {
 
     <script>
 
-        // ===== 新增：资源预缓存核心逻辑 =====
-// 1. 定义需要预缓存的所有资源列表
-function getAllResourceUrls() {
-    // 收集所有音频资源
-    const audioUrls = Array.from(document.querySelectorAll('.sound-button')).map(btn => btn.getAttribute('data-sound')).filter(url => url);
-    // 收集所有图片资源
-    const imageUrls = Array.from(document.querySelectorAll('img')).map(img => img.src).filter(url => url);
-    // 合并并去重
-    const allUrls = [...new Set([...audioUrls, ...imageUrls])];
-    return allUrls;
-}
-
-// 2. 检测是否已缓存过资源（使用 localStorage 标记）
-function hasCachedResources() {
-    return localStorage.getItem('site_resources_cached') === 'true';
-}
-
-// 3. 预缓存所有资源
-async function preCacheAllResources() {
-    const resourceUrls = getAllResourceUrls();
-    if (resourceUrls.length === 0) return;
-
-    console.log('开始预缓存资源，共', resourceUrls.length, '个');
-    
-    // 逐个加载资源（音频/图片）
-    for (const url of resourceUrls) {
-        try {
-            if (url.endsWith('.mp3') || url.endsWith('.mp4') || url.endsWith('.wav')) {
-                // 预加载音频
-                const audio = new Audio(url);
-                await new Promise((resolve) => {
-                    audio.addEventListener('loadeddata', resolve);
-                    audio.addEventListener('error', resolve); // 出错也标记完成，避免阻塞
-                });
-            } else if (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg')) {
-                // 预加载图片
-                const img = new Image();
-                await new Promise((resolve) => {
-                    img.onload = resolve;
-                    img.onerror = resolve; // 出错也标记完成
-                    img.src = url;
-                });
-            }
-        } catch (err) {
-            console.warn('预缓存资源失败:', url, err);
-        }
-    }
-
-    // 标记缓存完成
-    localStorage.setItem('site_resources_cached', 'true');
-    console.log('所有资源预缓存完成');
-}
-
-// 4. 页面加载后执行缓存检测
-document.addEventListener('DOMContentLoaded', function() {
-    // 原有代码（如音频播放逻辑）保持不变...
-
-    // ===== 新增：首次访问时预缓存 =====
-    if (!hasCachedResources()) {
-        // 延迟执行，避免阻塞页面渲染
-        setTimeout(() => {
-            preCacheAllResources();
-        }, 1000);
-    } else {
-        console.log('资源已缓存，无需重复加载');
-    }
-
-        
-        // 全局音频控制变量
+      // 全局音频控制变量（保留原有）
 let currentAudio = null;
-let playTimer = null; // 统一管理定时器（替代原playInterval，语义更清晰）
+let playTimer = null;
 let soundButtons = [];
-let isPlayingSequence = false; // 标记是否正在顺序播放
-let isPlayingRandom = false; // 标记是否正在随机播放
+let isPlayingSequence = false;
+let isPlayingRandom = false;
 
-// 等待页面完全加载
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. 获取所有声音按钮
-    const buttons = document.querySelectorAll('.sound-button');
+// ===== 修复版：预缓存逻辑（和播放逻辑完全隔离）=====
+// 1. 收集所有资源URL（仅收集，不立即加载）
+function getAllResourceUrls() {
+    const audioUrls = Array.from(document.querySelectorAll('.sound-button'))
+        .map(btn => btn.getAttribute('data-sound'))
+        .filter(url => url && url.trim() !== ''); // 过滤空链接
     
-    // 2. 初始化音频列表（兼容无data-volume的情况）
+    const imageUrls = Array.from(document.querySelectorAll('img'))
+        .map(img => img.src)
+        .filter(url => url && url.trim() !== '');
+    
+    return [...new Set([...audioUrls, ...imageUrls])]; // 去重
+}
+
+// 2. 轻量级预缓存（仅让浏览器缓存，不占用当前音频实例）
+function preCacheSingleResource(url) {
+    if (!url) return;
+    try {
+        // 音频资源：仅创建实例、设置preload，不播放、不绑定事件
+        if (url.endsWith('.mp3') || url.endsWith('.mp4') || url.endsWith('.wav')) {
+            const audio = new Audio(url);
+            audio.preload = 'metadata'; // 仅加载元数据，不加载完整文件（减少带宽）
+            audio.load(); // 触发缓存
+        } 
+        // 图片资源：创建Image实例触发缓存
+        else if (url.match(/\.(png|jpg|jpeg|gif)$/i)) {
+            const img = new Image();
+            img.src = url;
+        }
+    } catch (err) {
+        console.warn('预缓存单个资源失败:', url, err);
+    }
+}
+
+// 3. 检测缓存状态 + 异步预缓存（不阻塞主线程）
+function initResourceCache() {
+    // 仅首次访问时执行
+    if (localStorage.getItem('site_resources_cached') !== 'true') {
+        const allUrls = getAllResourceUrls();
+        // 用setTimeout分批加载，完全不阻塞播放逻辑
+        setTimeout(() => {
+            allUrls.forEach(url => {
+                setTimeout(() => preCacheSingleResource(url), 50); // 分批加载，避免卡顿
+            });
+            // 标记缓存完成（无论是否成功，避免重复执行）
+            localStorage.setItem('site_resources_cached', 'true');
+            console.log('预缓存任务已触发，资源总数:', allUrls.length);
+        }, 2000); // 延迟2秒，等页面完全就绪
+    }
+}
+
+// ===== 修复版：播放逻辑（和预缓存完全隔离）=====
+function stopAllPlayback() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio.removeEventListener('ended', onAudioEnded);
+        currentAudio = null;
+    }
+    if (playTimer) {
+        clearInterval(playTimer);
+        clearTimeout(playTimer);
+        playTimer = null;
+    }
+    isPlayingSequence = false;
+    isPlayingRandom = false;
+}
+
+function onAudioEnded() {
+    if (isPlayingSequence) {
+        playNextSequenceAudio();
+    } else if (isPlayingRandom) {
+        playRandomAudio();
+    }
+}
+
+// 页面加载完成后初始化
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. 初始化音频按钮列表（原有逻辑保留）
+    const buttons = document.querySelectorAll('.sound-button');
     soundButtons = Array.from(buttons).map(function(btn) {
         const volume = parseFloat(btn.getAttribute('data-volume'));
         return {
@@ -736,234 +742,97 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // 3. 单个按钮点击播放（核心：确保用户交互后播放）
+    // 2. 单个按钮播放（核心修复：和预缓存Audio实例隔离）
     buttons.forEach(function(button) {
         button.addEventListener('click', function() {
-            // 先停止所有播放（包括顺序/随机）
-            stopAllPlayback();
-
-            // 读取音频地址和音量（容错处理）
+            stopAllPlayback(); // 停止所有播放
+            
             const soundSrc = button.getAttribute('data-sound');
             const volume = parseFloat(button.getAttribute('data-volume'));
             const finalVolume = isNaN(volume) ? 1.0 : volume;
 
-            // 播放音频（加容错提示）
-            try {
-                currentAudio = new Audio(soundSrc);
-                currentAudio.volume = finalVolume;
-                currentAudio.play().then(function() {
-                    console.log('音频播放成功:', soundSrc);
-                }).catch(function(error) {
-                    console.error('播放失败:', error);
-                    alert('播放失败！原因：\n1. 音频链接失效\n2. 浏览器禁止自动播放（请先点击页面空白处再试）\n3. 网络问题');
-                });
-            } catch (e) {
-                alert('音频加载出错：' + e.message);
-            }
+            // 重新创建独立的Audio实例，和预缓存的实例完全隔离
+            currentAudio = new Audio(soundSrc);
+            currentAudio.volume = finalVolume;
+            // 播放时添加错误捕获
+            currentAudio.play().catch(function(error) {
+                console.error('播放失败:', error);
+                alert('播放失败：\n1. 音频链接无效\n2. 请先点击页面任意位置再试（浏览器限制）');
+            });
         });
     });
 
-    // 4. 统一的停止播放函数（核心：所有停止逻辑集中管理）
-    function stopAllPlayback() {
-        // 1. 立即暂停当前播放的音频
-        if (currentAudio) {
-            currentAudio.pause(); // 暂停播放
-            currentAudio.currentTime = 0; // 重置播放进度到开头
-            // 移除所有事件监听（避免残留）
-            currentAudio.removeEventListener('ended', onAudioEnded);
-            currentAudio = null; // 清空引用
-        }
-
-        // 2. 清除定时器（终止随机播放/旧版顺序播放）
-        if (playTimer) {
-            clearInterval(playTimer);
-            clearTimeout(playTimer); // 兼容setTimeout的情况
-            playTimer = null;
-        }
-
-        // 3. 重置播放状态标记
-        isPlayingSequence = false;
-        isPlayingRandom = false;
-
-        console.log('所有播放已停止');
-    }
-
-    // 音频播放结束的通用回调（解决作用域问题）
-    function onAudioEnded() {
-        if (isPlayingSequence) {
-            playNextSequenceAudio(); // 顺序播放下一个
-        } else if (isPlayingRandom) {
-            playRandomAudio(); // 随机播放下一个
-        }
-    }
-
-    // 5. 顺序播放（优化：播放完一个再播下一个，可被停止）
+    // 3. 顺序播放（原有逻辑保留）
     document.querySelector('.seq-btn').addEventListener('click', function() {
-        // 先停止现有播放
         stopAllPlayback();
-        
-        isPlayingSequence = true; // 标记为顺序播放中
-        let index = 0; // 当前要播放的音频索引
+        isPlayingSequence = true;
+        let index = 0;
 
-        // 定义顺序播放下一个音频的函数
         function playNextSequenceAudio() {
-            // 如果已被停止，直接退出
-            if (!isPlayingSequence) return;
-
-            // 边界判断：索引超出音频列表，结束播放
-            if (index >= soundButtons.length) {
-                stopAllPlayback(); // 播放完毕，重置状态
+            if (!isPlayingSequence || index >= soundButtons.length) {
+                stopAllPlayback();
                 return;
             }
-
-            // 获取当前要播放的音频项
             const audioItem = soundButtons[index];
-            if (!audioItem || !audioItem.src) {
-                console.log(`第${index+1}个音频无有效播放源，跳过`);
+            if (!audioItem.src) {
                 index++;
                 playNextSequenceAudio();
                 return;
             }
-
-            // 创建并播放当前音频
             currentAudio = new Audio(audioItem.src);
-            currentAudio.volume = audioItem.volume || 1;
-
-            // 监听播放结束事件（绑定通用回调）
+            currentAudio.volume = audioItem.volume;
             currentAudio.addEventListener('ended', onAudioEnded);
-
-            // 播放音频
-            currentAudio.play().catch(function(err) {
-                console.log(`第${index+1}个音频播放失败，跳过:`, err);
+            currentAudio.play().catch(err => {
+                console.warn('顺序播放失败:', err);
                 index++;
                 playNextSequenceAudio();
             });
-
-            index++; // 提前递增索引（避免重复播放）
+            index++;
         }
-
-        // 启动第一个音频的播放
         playNextSequenceAudio();
     });
 
-    // 6. 随机播放（优化：播放完一个再随机播下一个，可被停止）
+    // 4. 随机播放（原有逻辑保留）
     document.querySelector('.rand-btn').addEventListener('click', function() {
-        // 先停止现有播放
         stopAllPlayback();
-        
-        isPlayingRandom = true; // 标记为随机播放中
+        isPlayingRandom = true;
 
-        // 定义随机播放单个音频的函数
         function playRandomAudio() {
-            // 如果已被停止，直接退出
             if (!isPlayingRandom) return;
-
-            // 随机选一个音频
             const randomIndex = Math.floor(Math.random() * soundButtons.length);
             const audioItem = soundButtons[randomIndex];
-            
-            if (!audioItem || !audioItem.src) {
-                console.log('随机选中的音频无有效播放源，重新随机');
-                playRandomAudio(); // 重新选一个
+            if (!audioItem.src) {
+                playRandomAudio();
                 return;
             }
-
-            // 创建并播放音频
             currentAudio = new Audio(audioItem.src);
-            currentAudio.volume = audioItem.volume || 1;
-
-            // 监听播放结束事件（绑定通用回调）
+            currentAudio.volume = audioItem.volume;
             currentAudio.addEventListener('ended', onAudioEnded);
-
-            // 播放音频
-            currentAudio.play().catch(function(err) {
-                console.log('随机播放失败，重新随机:', err);
+            currentAudio.play().catch(err => {
+                console.warn('随机播放失败:', err);
                 playRandomAudio();
             });
         }
-
-        // 启动第一个随机音频的播放
         playRandomAudio();
     });
 
-    // 7. 停止按钮绑定事件（调用统一的停止函数）
-    document.querySelector('.stop-btn').addEventListener('click', function() {
-        stopAllPlayback();
-    });
+    // 5. 停止按钮（原有逻辑保留）
+    document.querySelector('.stop-btn').addEventListener('click', stopAllPlayback);
+
+    // 6. 初始化预缓存（新增：放在最后，不影响播放）
+    initResourceCache();
+
+    // 7. 回到顶部按钮逻辑（如果有，保留）
+    const backToTopBtn = document.getElementById('backToTopBtn');
+    if (backToTopBtn) {
+        window.addEventListener('scroll', () => {
+            backToTopBtn.style.display = window.pageYOffset > 300 ? 'block' : 'none';
+        });
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 });
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
-    <style>
-        /* 页面基础样式，仅用于演示长页面效果 */
-        body {
-            height: 3000px; /* 制造长页面 */
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        /* 回到顶部按钮样式 */
-        .back-to-top {
-            /* 固定定位，始终显示在屏幕右下角 */
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            /* 按钮样式 */
-            width: 50px;
-            height: 50px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 50px;
-            font-size: 20px;
-            cursor: pointer;
-            /* 初始隐藏 */
-            display: none;
-            /* 鼠标悬浮效果 */
-            transition: background-color 0.3s ease;
-            /* 防止按钮被遮挡 */
-            z-index: 9999;
-        }
-
-        .back-to-top:hover {
-            background-color: #0056b3;
-        }
-
-        /* 可选：添加向上箭头图标（替代文字） */
-        .back-to-top::after {
-            content: "↑";
-        }
-    </style>
-</head>
-<body>
-    <!-- 回到顶部按钮 -->
-    <div class="back-to-top" id="backToTopBtn"></div>
-
-    <script>
-        const backToTopBtn = document.getElementById('backToTopBtn');
-
-        window.addEventListener('scroll', function() {
-            if (window.pageYOffset > 300) {
-                backToTopBtn.style.display = "block";
-            } else {
-                backToTopBtn.style.display = "none";
-            }
-        });
-
-        backToTopBtn.addEventListener('click', function() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
     </script>
 </body>
 </html>
