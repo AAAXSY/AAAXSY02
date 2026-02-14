@@ -780,36 +780,57 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 3. 顺序播放（原有逻辑保留）
-    document.querySelector('.seq-btn').addEventListener('click', function() {
-        stopAllPlayback();
-        isPlayingSequence = true;
-        let index = 0;
-
-        function playNextSequenceAudio() {
-            if (!isPlayingSequence || index >= soundButtons.length) {
-                stopAllPlayback();
-                return;
-            }
-            const audioItem = soundButtons[index];
-            if (!audioItem.src) {
-                index++;
-                playNextSequenceAudio();
-                return;
-            }
-            currentAudio = new Audio(audioItem.src);
-            currentAudio.volume = audioItem.volume;
-            currentAudio.addEventListener('ended', onAudioEnded);
-            currentAudio.play().catch(err => {
-                console.warn('顺序播放失败:', err);
-                index++;
-                playNextSequenceAudio();
-            });
-            index++;
+   // 替换原有的顺序播放按钮点击事件代码
+document.querySelector('.seq-btn').addEventListener('click', function() {
+    stopAllPlayback(); // 先停止所有播放
+    isPlayingSequence = true;
+    let currentIndex = 0; // 把索引变量放在闭包内，确保每次点击重新开始
+    
+    // 重构顺序播放函数，解决作用域和递归问题
+    function playNextSequenceAudio() {
+        // 边界判断：停止播放/索引越界则终止
+        if (!isPlayingSequence || currentIndex >= soundButtons.length) {
+            stopAllPlayback();
+            return;
         }
-        playNextSequenceAudio();
-    });
 
+        const audioItem = soundButtons[currentIndex];
+        // 跳过空音频链接
+        if (!audioItem || !audioItem.src) {
+            currentIndex++;
+            playNextSequenceAudio(); // 递归调用下一个
+            return;
+        }
+
+        // 销毁上一个音频实例，避免内存泄漏
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+
+        // 创建新的音频实例
+        currentAudio = new Audio(audioItem.src);
+        currentAudio.volume = audioItem.volume;
+        
+        // 播放结束后自动播放下一个
+        currentAudio.addEventListener('ended', function() {
+            currentIndex++; // 播放完当前，索引+1
+            playNextSequenceAudio(); // 调用下一个
+        });
+
+        // 播放音频（添加错误处理）
+        currentAudio.play().catch(function(err) {
+            console.warn(`顺序播放第${currentIndex+1}个音频失败:`, err);
+            currentIndex++; // 播放失败也跳过当前
+            playNextSequenceAudio();
+        });
+    }
+
+    // 启动顺序播放
+    playNextSequenceAudio();
+});
+
+    
 // 4. 随机播放（带间距控制 + 防重复点击 + 自动续播）
 document.querySelector('.rand-btn').addEventListener('click', function() {
     if (isPlayingRandom) {
