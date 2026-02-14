@@ -822,17 +822,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // 6. 初始化预缓存（新增：放在最后，不影响播放）
     initResourceCache();
 
-    // 7. 回到顶部按钮逻辑（如果有，保留）
-    const backToTopBtn = document.getElementById('backToTopBtn');
-    if (backToTopBtn) {
-        window.addEventListener('scroll', () => {
-            backToTopBtn.style.display = window.pageYOffset > 300 ? 'block' : 'none';
+  <!-- 回到顶部按钮 -->
+    <div class="back-to-top" id="backToTopBtn"></div>
+
+    <script>
+        const backToTopBtn = document.getElementById('backToTopBtn');
+
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.style.display = "block";
+            } else {
+                backToTopBtn.style.display = "none";
+            }
         });
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        backToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         });
-    }
-});
     </script>
 </body>
 </html>
