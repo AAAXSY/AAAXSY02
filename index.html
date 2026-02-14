@@ -576,29 +576,66 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // 5. 顺序播放（加容错）
-    document.querySelector('.seq-btn').addEventListener('click', function() {
-        // 先停止现有播放
-        document.querySelector('.stop-btn').click();
-        let index = 0;
+  // 5. 顺序播放（优化：播放完一个再播放下一个，加强容错）
+document.querySelector('.seq-btn').addEventListener('click', function() {
+    // 先停止现有播放（包括可能正在进行的顺序播放）
+    document.querySelector('.stop-btn').click();
+    let index = 0; // 当前要播放的音频索引
 
-        playInterval = setInterval(function() {
-            if (index >= soundButtons.length) {
-                clearInterval(playInterval);
-                playInterval = null;
-                return;
-            }
-            // 播放当前音频
-            const audioItem = soundButtons[index];
-            if (audioItem.src) {
-                currentAudio = new Audio(audioItem.src);
-                currentAudio.volume = audioItem.volume;
-                currentAudio.play().catch(function(err) {
-                    console.log('顺序播放失败（跳过）:', err);
-                });
-            }
-            index++;
-        }, 1500);
-    });
+    // 定义递归播放函数：播放当前音频，播放完自动播下一个
+    function playNextAudio() {
+        // 边界判断：索引超出音频列表，结束播放
+        if (index >= soundButtons.length) {
+            currentAudio = null; // 清空当前音频引用
+            return;
+        }
+
+        // 获取当前要播放的音频项
+        const audioItem = soundButtons[index];
+        // 容错：检查音频源是否存在
+        if (!audioItem || !audioItem.src) {
+            console.log(`第${index+1}个音频无有效播放源，跳过`);
+            index++; // 索引递增，继续下一个
+            playNextAudio(); // 递归调用，播放下一个
+            return;
+        }
+
+        // 创建并播放当前音频
+        currentAudio = new Audio(audioItem.src);
+        currentAudio.volume = audioItem.volume || 1; // 容错：默认音量1
+
+        // 监听音频播放结束事件：播放完后自动播下一个
+        currentAudio.addEventListener('ended', function() {
+            index++; // 索引递增
+            playNextAudio(); // 递归调用，播放下一个
+        });
+
+        // 播放音频，捕获播放失败的异常
+        currentAudio.play().catch(function(err) {
+            console.log(`第${index+1}个音频播放失败，跳过:`, err);
+            index++; // 索引递增
+            playNextAudio(); // 即使播放失败，也继续下一个
+        });
+    }
+
+    // 启动第一个音频的播放
+    playNextAudio();
+});
+
+// 补充：停止按钮的逻辑（需确保能终止顺序播放）
+document.querySelector('.stop-btn').addEventListener('click', function() {
+    // 停止当前正在播放的音频
+    if (currentAudio) {
+        currentAudio.pause(); // 暂停播放
+        currentAudio.removeEventListener('ended', playNextAudio); // 移除结束事件监听
+        currentAudio = null; // 清空引用
+    }
+    // 若有遗留的interval（原代码），也清空（兼容旧逻辑）
+    if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+    }
+});
 
     // 6. 随机播放（加容错）
     document.querySelector('.rand-btn').addEventListener('click', function() {
