@@ -646,7 +646,76 @@ body {
     </div>
 
     <script>
-   // 全局音频控制变量
+
+        // ===== 新增：资源预缓存核心逻辑 =====
+// 1. 定义需要预缓存的所有资源列表
+function getAllResourceUrls() {
+    // 收集所有音频资源
+    const audioUrls = Array.from(document.querySelectorAll('.sound-button')).map(btn => btn.getAttribute('data-sound')).filter(url => url);
+    // 收集所有图片资源
+    const imageUrls = Array.from(document.querySelectorAll('img')).map(img => img.src).filter(url => url);
+    // 合并并去重
+    const allUrls = [...new Set([...audioUrls, ...imageUrls])];
+    return allUrls;
+}
+
+// 2. 检测是否已缓存过资源（使用 localStorage 标记）
+function hasCachedResources() {
+    return localStorage.getItem('site_resources_cached') === 'true';
+}
+
+// 3. 预缓存所有资源
+async function preCacheAllResources() {
+    const resourceUrls = getAllResourceUrls();
+    if (resourceUrls.length === 0) return;
+
+    console.log('开始预缓存资源，共', resourceUrls.length, '个');
+    
+    // 逐个加载资源（音频/图片）
+    for (const url of resourceUrls) {
+        try {
+            if (url.endsWith('.mp3') || url.endsWith('.mp4') || url.endsWith('.wav')) {
+                // 预加载音频
+                const audio = new Audio(url);
+                await new Promise((resolve) => {
+                    audio.addEventListener('loadeddata', resolve);
+                    audio.addEventListener('error', resolve); // 出错也标记完成，避免阻塞
+                });
+            } else if (url.endsWith('.png') || url.endsWith('.jpg') || url.endsWith('.jpeg')) {
+                // 预加载图片
+                const img = new Image();
+                await new Promise((resolve) => {
+                    img.onload = resolve;
+                    img.onerror = resolve; // 出错也标记完成
+                    img.src = url;
+                });
+            }
+        } catch (err) {
+            console.warn('预缓存资源失败:', url, err);
+        }
+    }
+
+    // 标记缓存完成
+    localStorage.setItem('site_resources_cached', 'true');
+    console.log('所有资源预缓存完成');
+}
+
+// 4. 页面加载后执行缓存检测
+document.addEventListener('DOMContentLoaded', function() {
+    // 原有代码（如音频播放逻辑）保持不变...
+
+    // ===== 新增：首次访问时预缓存 =====
+    if (!hasCachedResources()) {
+        // 延迟执行，避免阻塞页面渲染
+        setTimeout(() => {
+            preCacheAllResources();
+        }, 1000);
+    } else {
+        console.log('资源已缓存，无需重复加载');
+    }
+
+        
+        // 全局音频控制变量
 let currentAudio = null;
 let playTimer = null; // 统一管理定时器（替代原playInterval，语义更清晰）
 let soundButtons = [];
