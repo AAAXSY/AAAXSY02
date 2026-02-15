@@ -649,7 +649,7 @@ body {
     <div class="back-to-top" id="backToTopBtn"></div>
 
     <script>
-        const backToTopBtn = document.getElementById('backToTopBtn');
+              const backToTopBtn = document.getElementById('backToTopBtn');
 
         window.addEventListener('scroll', function() {
             if (window.pageYOffset > 300) {
@@ -665,236 +665,245 @@ body {
                 behavior: 'smooth'
             });
         });
-      // 全局音频控制变量（保留原有）
-let currentAudio = null;
-let playTimer = null;
-let soundButtons = [];
-let isPlayingSequence = false;
-let isPlayingRandom = false;
+      
+        // 全局音频控制变量（保留原有）
+        let currentAudio = null;
+        let playTimer = null;
+        let soundButtons = [];
+        let isPlayingSequence = false;
+        let isPlayingRandom = false;
 
-// ===== 修复版：预缓存逻辑（和播放逻辑完全隔离）=====
-// 1. 收集所有资源URL（仅收集，不立即加载）
-function getAllResourceUrls() {
-    const audioUrls = Array.from(document.querySelectorAll('.sound-button'))
-        .map(btn => btn.getAttribute('data-sound'))
-        .filter(url => url && url.trim() !== ''); // 过滤空链接
-    
-    const imageUrls = Array.from(document.querySelectorAll('img'))
-        .map(img => img.src)
-        .filter(url => url && url.trim() !== '');
-    
-    return [...new Set([...audioUrls, ...imageUrls])]; // 去重
-}
-
-// 2. 轻量级预缓存（仅让浏览器缓存，不占用当前音频实例）
-function preCacheSingleResource(url) {
-    if (!url) return;
-    try {
-        // 音频资源：仅创建实例、设置preload，不播放、不绑定事件
-        if (url.endsWith('.mp3') || url.endsWith('.mp4') || url.endsWith('.wav')) {
-            const audio = new Audio(url);
-            audio.preload = 'metadata'; // 仅加载元数据，不加载完整文件（减少带宽）
-            audio.load(); // 触发缓存
-        } 
-        // 图片资源：创建Image实例触发缓存
-        else if (url.match(/\.(png|jpg|jpeg|gif)$/i)) {
-            const img = new Image();
-            img.src = url;
-        }
-    } catch (err) {
-        console.warn('预缓存单个资源失败:', url, err);
-    }
-}
-
-// 3. 检测缓存状态 + 异步预缓存（不阻塞主线程）
-function initResourceCache() {
-    // 仅首次访问时执行
-    if (localStorage.getItem('site_resources_cached') !== 'true') {
-        const allUrls = getAllResourceUrls();
-        // 用setTimeout分批加载，完全不阻塞播放逻辑
-        setTimeout(() => {
-            allUrls.forEach(url => {
-                setTimeout(() => preCacheSingleResource(url), 50); // 分批加载，避免卡顿
-            });
-            // 标记缓存完成（无论是否成功，避免重复执行）
-            localStorage.setItem('site_resources_cached', 'true');
-            console.log('预缓存任务已触发，资源总数:', allUrls.length);
-        }, 2000); // 延迟2秒，等页面完全就绪
-    }
-}
-
-// ===== 修复版：播放逻辑（和预缓存完全隔离）=====
-function stopAllPlayback() {
-    if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-        currentAudio.removeEventListener('ended', onAudioEnded);
-        currentAudio = null;
-    }
-    if (playTimer) {
-        clearInterval(playTimer);
-        clearTimeout(playTimer);
-        playTimer = null;
-    }
-    isPlayingSequence = false;
-    isPlayingRandom = false;
-}
-
-function onAudioEnded() {
-    if (isPlayingSequence) {
-        playNextSequenceAudio();
-    } else if (isPlayingRandom) {
-        playRandomAudio();
-    }
-}
-
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. 初始化音频按钮列表（原有逻辑保留）
-    const buttons = document.querySelectorAll('.sound-button');
-    soundButtons = Array.from(buttons).map(function(btn) {
-        const volume = parseFloat(btn.getAttribute('data-volume'));
-        return {
-            src: btn.getAttribute('data-sound'),
-            volume: isNaN(volume) ? 1.0 : volume
-        };
-    });
-
-    // 2. 单个按钮播放（核心修复：和预缓存Audio实例隔离）
-    buttons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            stopAllPlayback(); // 停止所有播放
+        // ===== 修复版：预缓存逻辑（和播放逻辑完全隔离）=====
+        // 1. 收集所有资源URL（仅收集，不立即加载）
+        function getAllResourceUrls() {
+            const audioUrls = Array.from(document.querySelectorAll('.sound-button'))
+                .map(btn => btn.getAttribute('data-sound'))
+                .filter(url => url && url.trim() !== ''); // 过滤空链接
             
-            const soundSrc = button.getAttribute('data-sound');
-            const volume = parseFloat(button.getAttribute('data-volume'));
-            const finalVolume = isNaN(volume) ? 1.0 : volume;
+            const imageUrls = Array.from(document.querySelectorAll('img'))
+                .map(img => img.src)
+                .filter(url => url && url.trim() !== '');
+            
+            return [...new Set([...audioUrls, ...imageUrls])]; // 去重
+        }
 
-            // 重新创建独立的Audio实例，和预缓存的实例完全隔离
-            currentAudio = new Audio(soundSrc);
-            currentAudio.volume = finalVolume;
-            // 播放时添加错误捕获
-            currentAudio.play().catch(function(error) {
-                console.error('播放失败:', error);
-                alert('播放失败：\n1. 音频链接无效\n2. 请先点击页面任意位置再试（浏览器限制）');
+        // 2. 轻量级预缓存（仅让浏览器缓存，不占用当前音频实例）
+        function preCacheSingleResource(url) {
+            if (!url) return;
+            try {
+                // 音频资源：仅创建实例、设置preload，不播放、不绑定事件
+                if (url.endsWith('.mp3') || url.endsWith('.mp4') || url.endsWith('.wav')) {
+                    const audio = new Audio(url);
+                    audio.preload = 'metadata'; // 仅加载元数据，不加载完整文件（减少带宽）
+                    audio.load(); // 触发缓存
+                } 
+                // 图片资源：创建Image实例触发缓存
+                else if (url.match(/\.(png|jpg|jpeg|gif)$/i)) {
+                    const img = new Image();
+                    img.src = url;
+                }
+            } catch (err) {
+                console.warn('预缓存单个资源失败:', url, err);
+            }
+        }
+
+        // 3. 检测缓存状态 + 异步预缓存（不阻塞主线程）
+        function initResourceCache() {
+            // 仅首次访问时执行
+            if (localStorage.getItem('site_resources_cached') !== 'true') {
+                const allUrls = getAllResourceUrls();
+                // 用setTimeout分批加载，完全不阻塞播放逻辑
+                setTimeout(() => {
+                    allUrls.forEach(url => {
+                        setTimeout(() => preCacheSingleResource(url), 50); // 分批加载，避免卡顿
+                    });
+                    // 标记缓存完成（无论是否成功，避免重复执行）
+                    localStorage.setItem('site_resources_cached', 'true');
+                    console.log('预缓存任务已触发，资源总数:', allUrls.length);
+                }, 2000); // 延迟2秒，等页面完全就绪
+            }
+        }
+
+        // ===== 修复版：播放逻辑（和预缓存完全隔离）=====
+        function stopAllPlayback() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio.removeEventListener('ended', onAudioEnded);
+                currentAudio = null;
+            }
+            if (playTimer) {
+                clearInterval(playTimer);
+                clearTimeout(playTimer);
+                playTimer = null;
+            }
+            isPlayingSequence = false;
+            isPlayingRandom = false;
+        }
+
+        function onAudioEnded() {
+            if (isPlayingSequence) {
+                playNextSequenceAudio();
+            } else if (isPlayingRandom) {
+                playRandomAudio();
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 新增：移动端音频播放权限预触发（放在最顶部）
+            document.addEventListener('touchstart', function initAudioPermission() {
+                // 创建空音频实例触发权限
+                const tempAudio = new Audio();
+                tempAudio.volume = 0;
+                tempAudio.play().catch(() => {});
+                // 仅执行一次
+                document.removeEventListener('touchstart', initAudioPermission);
+            }, { once: true });
+
+            // 1. 初始化音频按钮列表（原有逻辑保留）
+            const buttons = document.querySelectorAll('.sound-button');
+            soundButtons = Array.from(buttons).map(function(btn) {
+                const volume = parseFloat(btn.getAttribute('data-volume'));
+                return {
+                    src: btn.getAttribute('data-sound'),
+                    volume: isNaN(volume) ? 1.0 : volume
+                };
             });
-        });
-    });
 
-   // 替换原有的顺序播放按钮点击事件代码
-document.querySelector('.seq-btn').addEventListener('click', function() {
-    stopAllPlayback(); // 先停止所有播放
-    isPlayingSequence = true;
-    let currentIndex = 0; // 把索引变量放在闭包内，确保每次点击重新开始
-    
-    // 重构顺序播放函数，解决作用域和递归问题
-    function playNextSequenceAudio() {
-        // 边界判断：停止播放/索引越界则终止
-        if (!isPlayingSequence || currentIndex >= soundButtons.length) {
-            stopAllPlayback();
-            return;
-        }
+            // 2. 单个按钮播放（核心修复：和预缓存Audio实例隔离）
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    stopAllPlayback(); // 停止所有播放
+                    
+                    const soundSrc = button.getAttribute('data-sound');
+                    const volume = parseFloat(button.getAttribute('data-volume'));
+                    const finalVolume = isNaN(volume) ? 1.0 : volume;
 
-        const audioItem = soundButtons[currentIndex];
-        // 跳过空音频链接
-        if (!audioItem || !audioItem.src) {
-            currentIndex++;
-            playNextSequenceAudio(); // 递归调用下一个
-            return;
-        }
+                    // 重新创建独立的Audio实例，和预缓存的实例完全隔离
+                    currentAudio = new Audio(soundSrc);
+                    currentAudio.volume = finalVolume;
+                    // 播放时添加错误捕获
+                    currentAudio.play().catch(function(error) {
+                        console.error('播放失败:', error);
+                        alert('播放失败：\n1. 音频链接无效\n2. 请先点击页面任意位置再试（浏览器限制）');
+                    });
+                });
+            });
 
-        // 销毁上一个音频实例，避免内存泄漏
-        if (currentAudio) {
-            currentAudio.pause();
-            currentAudio = null;
-        }
+            // 修复顺序播放 - 适配移动端
+            document.querySelector('.seq-btn').addEventListener('click', function() {
+                stopAllPlayback(); // 先停止所有播放
+                isPlayingSequence = true;
+                let currentIndex = 0; // 闭包保存索引，避免全局污染
+                
+                // 移动端必须先触发用户交互才能播放，添加主动播放触发
+                function playNextSequenceAudio() {
+                    if (!isPlayingSequence || currentIndex >= soundButtons.length) {
+                        stopAllPlayback();
+                        return;
+                    }
 
-        // 创建新的音频实例
-        currentAudio = new Audio(audioItem.src);
-        currentAudio.volume = audioItem.volume;
+                    const audioItem = soundButtons[currentIndex];
+                    if (!audioItem || !audioItem.src) {
+                        currentIndex++;
+                        playNextSequenceAudio();
+                        return;
+                    }
+
+                    // 销毁旧实例，避免移动端内存泄漏
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio.removeEventListener('ended', onAudioEnded);
+                        currentAudio = null;
+                    }
+
+                    currentAudio = new Audio(audioItem.src);
+                    currentAudio.volume = audioItem.volume;
+                    
+                    // 移动端兼容：ended事件重新绑定
+                    currentAudio.onended = function() {
+                        currentIndex++;
+                        // 延迟执行，避免移动端事件触发过快
+                        setTimeout(playNextSequenceAudio, 100);
+                    };
+
+                    // 移动端播放容错：捕获错误并继续
+                    currentAudio.play().catch(function(err) {
+                        console.warn(`顺序播放第${currentIndex+1}个音频失败:`, err);
+                        // 播放失败仍继续下一个
+                        currentIndex++;
+                        setTimeout(playNextSequenceAudio, 100);
+                    });
+                }
+
+                // 移动端强制触发用户交互播放
+                playNextSequenceAudio();
+            });
         
-        // 播放结束后自动播放下一个
-        currentAudio.addEventListener('ended', function() {
-            currentIndex++; // 播放完当前，索引+1
-            playNextSequenceAudio(); // 调用下一个
-        });
+            // 修复随机播放 - 适配移动端
+            document.querySelector('.rand-btn').addEventListener('click', function() {
+                if (isPlayingRandom) return;
 
-        // 播放音频（添加错误处理）
-        currentAudio.play().catch(function(err) {
-            console.warn(`顺序播放第${currentIndex+1}个音频失败:`, err);
-            currentIndex++; // 播放失败也跳过当前
-            playNextSequenceAudio();
-        });
-    }
+                stopAllPlayback();
+                isPlayingRandom = true;
+                const audioInterval = 100; // 0.1秒间距，适配移动端
+                
+                // 记录上一个播放的索引，避免连续重复
+                let lastIndex = -1;
 
-    // 启动顺序播放
-    playNextSequenceAudio();
-});
+                function playRandomAudio() {
+                    if (!isPlayingRandom) return;
 
-    
-// 4. 随机播放（带间距控制 + 防重复点击 + 自动续播）
-document.querySelector('.rand-btn').addEventListener('click', function() {
-    if (isPlayingRandom) {
-        return;
-    }
+                    const validSounds = soundButtons.filter(item => item.src && item.src.trim() !== '');
+                    if (validSounds.length === 0) {
+                        stopAllPlayback();
+                        alert('没有可播放的音频资源');
+                        return;
+                    }
 
-    stopAllPlayback();
-    isPlayingRandom = true;
+                    // 避免连续播放同一个音频
+                    let randomIndex;
+                    do {
+                        randomIndex = Math.floor(Math.random() * validSounds.length);
+                    } while (validSounds.length > 1 && randomIndex === lastIndex);
+                    lastIndex = randomIndex;
 
-    // 定义间距时间（0.1秒 = 100毫秒）
-    const audioInterval = 0; // 核心：已改为0.1秒
+                    const audioItem = validSounds[randomIndex];
+                    
+                    // 销毁旧实例
+                    if (currentAudio) {
+                        currentAudio.pause();
+                        currentAudio = null;
+                    }
 
-    function playRandomAudio() {
-        if (!isPlayingRandom) {
-            document.querySelector('.rand-btn').disabled = false;
-            document.querySelector('.rand-btn').style.opacity = "1";
-            return;
-        }
+                    currentAudio = new Audio(audioItem.src);
+                    currentAudio.volume = audioItem.volume;
 
-        const validSounds = soundButtons.filter(item => item.src && item.src.trim() !== '');
-        if (validSounds.length === 0) {
-            stopAllPlayback();
-            alert('没有可播放的音频资源');
-            document.querySelector('.rand-btn').disabled = false;
-            document.querySelector('.rand-btn').style.opacity = "1";
-            return;
-        }
+                    // 移动端兼容：ended事件改用onended，避免丢失绑定
+                    currentAudio.onended = function() {
+                        currentAudio = null;
+                        // 移动端延迟执行，避免事件叠加
+                        setTimeout(playRandomAudio, audioInterval);
+                    };
 
-        const randomIndex = Math.floor(Math.random() * validSounds.length);
-        const audioItem = validSounds[randomIndex];
+                    // 移动端播放错误处理：静默重试
+                    currentAudio.play().catch(err => {
+                        console.warn('随机播放失败:', err);
+                        setTimeout(playRandomAudio, audioInterval);
+                    });
+                }
 
-        currentAudio = new Audio(audioItem.src);
-        currentAudio.volume = audioItem.volume;
-
-        // 音频结束后延迟0.1秒再播放下一个
-        currentAudio.addEventListener('ended', function() {
-            currentAudio = null;
-            // 延迟执行下一个（0.1秒）
-            setTimeout(() => {
+                // 强制触发用户交互播放
                 playRandomAudio();
-            }, audioInterval); // 使用0.1秒的间距
+            });
+            
+            // 5. 停止按钮（原有逻辑保留）
+            document.querySelector('.stop-btn').addEventListener('click', stopAllPlayback);
+
+            // 6. 初始化预缓存（新增：放在最后，不影响播放）
+            initResourceCache();
         });
-
-        currentAudio.play().catch(err => {
-            console.warn('随机播放失败:', err);
-            currentAudio = null;
-            // 播放失败后延迟0.1秒重试
-            setTimeout(() => {
-                playRandomAudio();
-            }, audioInterval); // 同样使用0.1秒的间距
-        });
-    }
-
-    playRandomAudio();
-});
-    
-    // 5. 停止按钮（原有逻辑保留）
-    document.querySelector('.stop-btn').addEventListener('click', stopAllPlayback);
-
-    // 6. 初始化预缓存（新增：放在最后，不影响播放）
-    initResourceCache();
-       });
-
-
     </script>
 </body>
 </html>
