@@ -740,8 +740,9 @@ body {
   <!-- 回到顶部按钮 -->
     <div class="back-to-top" id="backToTopBtn"></div>
 
+    
     <script>
-  // 页面加载完成后执行所有逻辑
+    // 页面加载完成后执行所有逻辑
 document.addEventListener('DOMContentLoaded', function() {
    // ===== 弹窗功能 =====
     function initAlertModal() {
@@ -808,6 +809,8 @@ document.addEventListener('DOMContentLoaded', function() {
         playingAudios.forEach(audio => {
             audio.pause();
             audio.currentTime = 0;
+            // 移除ended事件监听，避免播放结束后继续触发自动播放
+            audio.onended = null;
         });
         playingAudios = []; // 清空列表
         
@@ -958,9 +961,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // 创建新的音频实例
             const audio = new Audio(audioItem.src);
             audio.volume = audioItem.volume;
-            
+            // 关键修改：将自动播放的音频加入全局控制数组
+            playingAudios.push(audio); 
+
             // 播放结束后继续下一个
             audio.onended = function() {
+                // 播放结束后从数组移除，避免内存泄漏
+                const index = playingAudios.indexOf(audio);
+                if (index > -1) playingAudios.splice(index, 1);
+                
                 currentIndex++;
                 // 延迟执行，避免移动端事件触发过快
                 setTimeout(playNextSequenceAudio, 100);
@@ -1019,9 +1028,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // 创建新的音频实例
             const audio = new Audio(audioItem.src);
             audio.volume = audioItem.volume;
+            // 关键修改：将自动播放的音频加入全局控制数组
+            playingAudios.push(audio);
 
             // 播放结束后继续随机播放
             audio.onended = function() {
+                // 播放结束后从数组移除
+                const index = playingAudios.indexOf(audio);
+                if (index > -1) playingAudios.splice(index, 1);
+                
                 // 移动端延迟执行，避免事件叠加
                 setTimeout(playRandomAudio, audioInterval);
             };
