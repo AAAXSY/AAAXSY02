@@ -689,7 +689,7 @@ body {
 
     
     <script>
-   // 页面加载完成后执行所有逻辑
+  // 页面加载完成后执行所有逻辑
 document.addEventListener('DOMContentLoaded', function() {
    // ===== 弹窗功能 =====
     function initAlertModal() {
@@ -749,8 +749,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let isPlayingRandom = false;
     // 新增：存储所有正在播放的独立音频实例（用于停止全部）
     let playingAudios = [];
-    // ===== 新增：全局统一音量设置 =====
-    const STANDARD_VOLUME = 0.5; // 统一音量（0-1之间，可自行调整）
 
     // ===== 3. 停止所有播放的函数（适配多音频实例）=====
     function stopAllPlayback() {
@@ -834,10 +832,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===== 6. 初始化音频按钮列表 =====
     const buttons = document.querySelectorAll('.sound-button');
     soundButtons = Array.from(buttons).map(function(btn) {
-        // 取消自定义音量，统一使用全局标准音量
+        const volume = parseFloat(btn.getAttribute('data-volume'));
         return {
             src: btn.getAttribute('data-sound'),
-            volume: STANDARD_VOLUME
+            volume: isNaN(volume) ? 1.0 : volume
         };
     });
 
@@ -850,8 +848,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const soundSrc = button.getAttribute('data-sound');
-            // 取消自定义音量，使用全局统一音量
-            const finalVolume = STANDARD_VOLUME;
+            const volume = parseFloat(button.getAttribute('data-volume'));
+            const finalVolume = isNaN(volume) ? 1.0 : volume;
 
             // 为每个点击创建独立的音频实例（不再复用currentAudio）
             const audio = new Audio(soundSrc);
